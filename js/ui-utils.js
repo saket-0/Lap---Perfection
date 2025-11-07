@@ -74,7 +74,7 @@ const createLedgerBlockElement = (block) => {
     blockElement.innerHTML = `
         <div class="flex justify-between items-center mb-2">
             <h4 class="font-semibold text-sm text-indigo-700">Block #${block.index}</h4>
-            <span class="text-xs px-2 py-0.5 bg-indigo-100 text-indigo-800 rounded-full">${new Date(block.timestamp).toLocaleTimeString()}</span>
+            <span class="text-xs px-2 py-0.5 bg-indigo-100 text-indigo-800 rounded-full">${new Date(block.timestamp).toLocaleString()}</span>
         </div>
         <p class="text-sm text-slate-700 mb-2">${transactionHtml}</p>
         <ul class="text-xs text-slate-600 space-y-1 mb-3">
