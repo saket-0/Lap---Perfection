@@ -114,6 +114,11 @@ const permissionService = {
                 return role === 'Admin' || role === 'Auditor';
             case 'CLEAR_DB':
                 return role === 'Admin';
+            
+            // *** NEW PERMISSION ***
+            case 'VIEW_HISTORICAL_STATE':
+                return role === 'Admin' || role === 'Auditor';
+
             default:
                 return false;
         }

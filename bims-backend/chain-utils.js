@@ -135,6 +135,41 @@ function validateTransaction(transaction, currentChain) {
 }
 
 /**
+ * *** NEW: Time-Travel Function ***
+ * Rebuilds the "world state" (inventory) from the chain up to a
+ * specific point in time.
+ * @param {Array<object>} blockchainArray - The *entire* blockchain.
+ * @param {string} targetTimestampISO - An ISO string of the time to stop at.
+ * @returns {object} An object containing { inventory, transactionCount }
+ */
+function rebuildStateAt(blockchainArray, targetTimestampISO) {
+    const inventory = new Map();
+    let transactionCount = 0;
+    const targetDate = new Date(targetTimestampISO);
+
+    // Start at 1 to skip the Genesis block
+    for (let i = 1; i < blockchainArray.length; i++) {
+        const block = blockchainArray[i];
+        const blockDate = new Date(block.timestamp);
+
+        // If the block's timestamp is *after* our target, stop processing.
+        if (blockDate > targetDate) {
+            break; // This is the "time-travel" part
+        }
+
+        // This block is at or before our target time, process it.
+        if (block && block.transaction) {
+            // Use the existing processTransaction logic in "muted" mode
+            processTransaction(block.transaction, inventory, true, null);
+            transactionCount++;
+        }
+    }
+
+    return { inventory, transactionCount };
+}
+
+
+/**
  * This is the core logic from core.js, now running on the server.
  * Note: It modifies the inventory map directly.
  */
@@ -208,5 +243,6 @@ module.exports = {
     createBlock,
     createGenesisBlock,
     isChainValid,
-    validateTransaction
+    validateTransaction,
+    rebuildStateAt // <-- Added new export
 };

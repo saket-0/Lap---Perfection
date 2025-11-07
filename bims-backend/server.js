@@ -10,7 +10,8 @@ const {
     createBlock, 
     createGenesisBlock, 
     isChainValid,
-    validateTransaction 
+    validateTransaction,
+    rebuildStateAt // <-- Import new function
 } = require('./chain-utils');
 
 const app = express();
@@ -399,6 +400,76 @@ app.get('/api/blockchain/verify', isAuthenticated, async (req, res) => {
         res.status(500).json({ message: e.message });
     }
 });
+
+// *** NEW: Snapshot Endpoint ***
+// GET /api/blockchain/state-at?timestamp=... - Gets a snapshot of the inventory at a specific time
+app.get('/api/blockchain/state-at', isAuthenticated, async (req, res) => {
+    console.log('⏳ Generating historical state snapshot...');
+    
+    // 1. Check permissions
+    if (req.session.user.role !== 'Admin' && req.session.user.role !== 'Auditor') {
+        return res.status(403).json({ message: 'Forbidden: Admin or Auditor access required' });
+    }
+
+    // 2. Get and validate timestamp
+    const { timestamp } = req.query;
+    if (!timestamp) {
+        return res.status(400).json({ message: 'A valid "timestamp" query parameter is required.' });
+    }
+    
+    try {
+        // 3. Fetch the *entire* chain
+        await getGenesisBlock();
+        const chainResult = await pool.query(`${SELECT_BLOCKCHAIN_FIELDS} ORDER BY index ASC`);
+        const currentChain = chainResult.rows;
+
+        // 4. Rebuild state using our new utility
+        const { inventory, transactionCount } = rebuildStateAt(currentChain, timestamp);
+
+        // 5. Calculate KPIs from the historical inventory map
+        let totalValue = 0;
+        let totalUnits = 0;
+
+        const serializableInventory = [];
+
+        inventory.forEach((product, sku) => {
+            let totalStock = 0;
+            product.locations.forEach(qty => totalStock += qty);
+            
+            totalUnits += totalStock;
+            totalValue += (product.price || 0) * totalStock;
+
+            // Serialize the inventory and its location maps for JSON response
+            serializableInventory.push([
+                sku,
+                {
+                    productName: product.productName,
+                    price: product.price,
+                    category: product.category,
+                    locations: Array.from(product.locations.entries()) // Convert Map to Array
+                }
+            ]);
+        });
+
+        console.log(`✅ Snapshot generated for ${timestamp}.`);
+        
+        // 6. Send the complete snapshot object
+        res.status(200).json({
+            snapshotTime: timestamp,
+            kpis: {
+                totalValue,
+                totalUnits,
+                transactionCount
+            },
+            inventory: serializableInventory // This is now a JSON-safe array
+        });
+
+    } catch (e) {
+        console.error('❌ Error generating snapshot:', e);
+        res.status(500).json({ message: e.message });
+    }
+});
+
 
 // DELETE /api/blockchain - Clears the chain (Admin only)
 app.delete('/api/blockchain', isAuthenticated, async (req, res) => {

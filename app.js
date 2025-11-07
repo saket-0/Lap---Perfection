@@ -31,6 +31,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         analytics: document.getElementById('analytics-view-template'), // *** NEW ***
         admin: document.getElementById('admin-view-template'),
         ledger: document.getElementById('ledger-view-template'),
+        snapshot: document.getElementById('snapshot-view-template'), // *** NEW ***
     };
     
     const API_BASE_URL = 'http://127.0.0.1:3000';
@@ -112,6 +113,15 @@ document.addEventListener('DOMContentLoaded', async () => {
                 renderAnalyticsPage();
                 break;
 
+            // *** NEW: Snapshot case ***
+            case 'snapshot':
+                Object.values(navLinks).forEach(link => link.classList.remove('active')); // No nav link is active
+                navLinks.ledger.classList.add('active'); // Keep ledger highlighted
+                viewTemplate = templates.snapshot.content.cloneNode(true);
+                appContent.appendChild(viewTemplate);
+                renderSnapshotView(context.snapshotData);
+                break;
+
             case 'dashboard':
             default:
                 navLinks.dashboard.classList.add('active');
@@ -170,6 +180,38 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (!permissionService.can('MANAGE_USERS')) return showError("Access Denied.");
             await handleAddUser(e.target);
         }
+
+        // *** NEW: Snapshot form handler ***
+        if (e.target.id === 'snapshot-form') {
+            if (!permissionService.can('VIEW_HISTORICAL_STATE')) return showError("Access Denied.");
+            
+            const timestamp = e.target.querySelector('#snapshot-timestamp').value;
+            if (!timestamp) return showError("Please select a date and time.");
+
+            // Add loading state
+            const button = e.target.querySelector('#generate-snapshot-button');
+            button.disabled = true;
+            button.innerHTML = '<i class="ph-bold ph-spinner animate-spin"></i> Generating...';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/blockchain/state-at?timestamp=${timestamp}`, {
+                    credentials: 'include'
+                });
+                
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.message || 'Failed to generate snapshot');
+                }
+                
+                // Success! Navigate to the new view with the data
+                navigateTo('snapshot', { snapshotData: data });
+
+            } catch (error) {
+                showError(error.message);
+                button.disabled = false;
+                button.innerHTML = '<i class="ph-bold ph-timer"></i> Generate Snapshot';
+            }
+        }
     });
 
     appContent.addEventListener('input', (e) => {
@@ -181,6 +223,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     appContent.addEventListener('click', async (e) => {
         if (e.target.closest('#back-to-list-button')) {
             navigateTo('products');
+            return;
+        }
+
+        // *** NEW: Back to ledger button ***
+        if (e.target.closest('#back-to-ledger-button')) {
+            navigateTo('ledger');
             return;
         }
         
@@ -690,8 +738,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     };
     
-    // (renderFullLedger is unchanged)
+    // (renderFullLedger is MODIFIED)
     const renderFullLedger = () => {
+        // *** NEW: Show form based on permission ***
+        const snapshotFormContainer = appContent.querySelector('#snapshot-form-container');
+        if (snapshotFormContainer) {
+            snapshotFormContainer.style.display = permissionService.can('VIEW_HISTORICAL_STATE') ? 'block' : 'none';
+            // Set default time to now
+            snapshotFormContainer.querySelector('#snapshot-timestamp').value = new Date().toISOString().slice(0, 16);
+        }
+
         const ledgerDisplay = appContent.querySelector('#full-ledger-display');
         ledgerDisplay.innerHTML = '';
         
@@ -744,6 +800,55 @@ document.addEventListener('DOMContentLoaded', async () => {
             showError(error.message);
             tableBody.innerHTML = `<tr><td colspan="4" class="table-cell text-center text-red-600">Error loading users.</td></tr>`;
         }
+    };
+
+    // *** NEW: Renders the snapshot view ***
+    const renderSnapshotView = (snapshotData) => {
+        const { kpis, inventory, snapshotTime } = snapshotData;
+
+        // 1. Populate time and KPIs
+        appContent.querySelector('#snapshot-time-display').textContent = new Date(snapshotTime).toLocaleString();
+        appContent.querySelector('#kpi-snapshot-total-value').textContent = `₹${kpis.totalValue.toFixed(2)}`;
+        appContent.querySelector('#kpi-snapshot-total-units').textContent = kpis.totalUnits;
+        appContent.querySelector('#kpi-snapshot-transactions').textContent = kpis.transactionCount;
+
+        // 2. Render the product grid
+        const productGrid = appContent.querySelector('#snapshot-product-grid');
+        productGrid.innerHTML = '';
+
+        // The inventory is an array of [sku, productData]
+        const inventoryMap = new Map(inventory);
+        
+        if (inventoryMap.size === 0) {
+            productGrid.innerHTML = `<p class="text-slate-500 lg:col-span-3">No products existed in the system at this time.</p>`;
+            return;
+        }
+
+        inventoryMap.forEach((product, productId) => {
+            const productCard = document.createElement('div');
+            // Add a class to make it look read-only
+            productCard.className = 'product-card opacity-80'; 
+            // Note: No data-product-id and no cursor-pointer style
+
+            const locationsMap = new Map(product.locations);
+            let totalStock = 0;
+            locationsMap.forEach(qty => totalStock += qty);
+
+            productCard.innerHTML = `
+                <div class="product-card-placeholder"><i class="ph-bold ph-package"></i></div>
+                <div class="product-card-content">
+                    <h3 class="font-semibold text-lg text-indigo-700 truncate">${product.productName}</h3>
+                    <p class="text-xs text-slate-500 mb-1">${productId}</p>
+                    <p class="text-xs font-medium text-indigo-600 bg-indigo-100 px-2 py-0.5 rounded-full inline-block mb-2">${product.category || 'Uncategorized'}</p>
+                    <hr class="my-2">
+                    <div class="flex justify-between items-center text-sm font-semibold">
+                        <span>Total Stock (at time):</span>
+                        <span>${totalStock} units</span>
+                    </div>
+                </div>
+            `;
+            productGrid.appendChild(productCard);
+        });
     };
 
     // (createLedgerBlockElement is unchanged, server now adds user info)
