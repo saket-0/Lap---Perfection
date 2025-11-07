@@ -88,6 +88,11 @@
                     </a>
                 </li>
                 <li>
+                    <a href="#" id="nav-anomaly" class="nav-link">
+                        <i class="ph-bold ph-shield-warning"></i> Anomaly Detection
+                    </a>
+                </li>
+                <li>
                     <a href="#" id="nav-admin" class="nav-link">
                         <i class="ph-bold ph-users"></i> Admin
                     </a>
@@ -530,28 +535,37 @@
                      </div>
                 </div>
 
-                <div classall="lg:col-span-2 bg-white p-6 rounded-lg shadow-md">
-                    <h2 class="text-2xl font-semibold mb-4 text-slate-800">Anomaly Detection Log</h2>
-                    <p class="text-sm text-slate-500 mb-4">
-                        Automated audit of transactions that follow crypto-rules
-                        but break business-logic rules.
-                    </p>
-                    <div id="anomaly-list" class="space-y-4 max-h-96 overflow-y-auto pr-2">
-                        </div>
-                    <p id="anomaly-list-empty" class="text-sm text-slate-500" style="display: none;">
-                        No anomalies found.
-                    </p>
                 </div>
-
-            </div>
         </div>
     </template>
 
+    <template id="anomaly-view-template">
+        <div class="space-y-8">
+            <h1 class="text-4xl font-bold text-slate-800">Anomaly Detection Report</h1>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-sm font-medium text-slate-500 uppercase">Total Anomalies Flagged</h3>
+                    <p id="kpi-total-anomalies" class="text-4xl font-bold text-red-600">0</p>
+                    <p class="text-xs text-slate-400 mt-1">Unique transactions flagged</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-sm font-medium text-slate-500 uppercase">% of Transactions Flagged</h3>
+                    <p id="kpi-percent-flagged" class="text-4xl font-bold text-red-600">0%</p>
+                    <p class="text-xs text-slate-400 mt-1">Flagged blocks vs. total blocks</p>
+                </div>
+            </div>
+
+            <div id="anomaly-list-container" class="space-y-8">
+                </div>
+        </div>
+    </template>
     <script src="config.js"></script>
     <script src="core.js"></script>
     <script src="js/ui-utils.js"></script>
     <script src="js/chart-renderer.js"></script>
     <script src="js/view-renderer.js"></script>
+    <script src="js/anomaly-renderer.js"></script>
     <script src="js/form-handlers.js"></script>
     <script src="app.js" defer></script>
 

@@ -17,6 +17,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         dashboard: document.getElementById('nav-dashboard'),
         products: document.getElementById('nav-products'),
         analytics: document.getElementById('nav-analytics'),
+        anomaly: document.getElementById('nav-anomaly'), // <-- ADDED
         admin: document.getElementById('nav-admin'),
         ledger: document.getElementById('nav-ledger'),
     };
@@ -25,6 +26,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         productList: document.getElementById('product-list-view-template'),
         productDetail: document.getElementById('product-detail-view-template'),
         analytics: document.getElementById('analytics-view-template'),
+        anomaly: document.getElementById('anomaly-view-template'), // <-- ADDED
         admin: document.getElementById('admin-view-template'),
         ledger: document.getElementById('ledger-view-template'),
         snapshot: document.getElementById('snapshot-view-template'),
@@ -47,6 +49,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         navLinks.admin.style.display = permissionService.can('VIEW_ADMIN_PANEL') ? 'flex' : 'none';
         navLinks.ledger.style.display = permissionService.can('VIEW_LEDGER') ? 'flex' : 'none';
+        // Re-use VIEW_LEDGER permission for the new anomaly page
+        navLinks.anomaly.style.display = permissionService.can('VIEW_LEDGER') ? 'flex' : 'none'; // <-- ADDED
         navLinks.analytics.style.display = 'flex';
 
         await loadBlockchain();
@@ -54,7 +58,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         navigateTo('dashboard');
     };
 
-    const navigateTo = (view, context = {}) => {
+    const navigateTo = async (view, context = {}) => {
         // Destroy old charts (function from chart-renderer.js)
         destroyCurrentCharts();
 
@@ -97,8 +101,18 @@ document.addEventListener('DOMContentLoaded', async () => {
                 navLinks.analytics.classList.add('active');
                 viewTemplate = templates.analytics.content.cloneNode(true);
                 appContent.appendChild(viewTemplate);
-                renderAnalyticsPage();
+                await renderAnalyticsPage(); // <-- MODIFIED (now async)
                 break;
+
+            // VVVV NEW CASE VVVV
+            case 'anomaly':
+                if (!permissionService.can('VIEW_LEDGER')) return navigateTo('dashboard');
+                navLinks.anomaly.classList.add('active');
+                viewTemplate = templates.anomaly.content.cloneNode(true);
+                appContent.appendChild(viewTemplate);
+                await renderAnomalyPage(); // Call function from anomaly-renderer.js
+                break;
+            // ^^^^ END OF NEW CASE ^^^^
 
             case 'snapshot':
                 navLinks.ledger.classList.add('active');
@@ -112,7 +126,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 navLinks.dashboard.classList.add('active');
                 viewTemplate = templates.dashboard.content.cloneNode(true);
                 appContent.appendChild(viewTemplate);
-                renderDashboard();
+                await renderDashboard(); // <-- MODIFIED (now async)
                 break;
         }
     };
@@ -140,6 +154,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     navLinks.dashboard.addEventListener('click', (e) => { e.preventDefault(); navigateTo('dashboard'); });
     navLinks.products.addEventListener('click', (e) => { e.preventDefault(); navigateTo('products'); });
     navLinks.analytics.addEventListener('click', (e) => { e.preventDefault(); navigateTo('analytics'); });
+    navLinks.anomaly.addEventListener('click', (e) => { e.preventDefault(); navigateTo('anomaly'); }); // <-- ADDED
     navLinks.admin.addEventListener('click', (e) => { e.preventDefault(); navigateTo('admin'); });
     navLinks.ledger.addEventListener('click', (e) => { e.preventDefault(); navigateTo('ledger'); });
 

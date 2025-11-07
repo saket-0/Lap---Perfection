@@ -23,34 +23,38 @@ const SELECT_BLOCKCHAIN_FIELDS = `
     FROM blockchain
 `;
 
+// Helper function for standard deviation
+const getStdDev = (array) => {
+    if (array.length === 0) return 0;
+    const n = array.length;
+    const mean = array.reduce((a, b) => a + b) / n;
+    const stdDev = Math.sqrt(array.map(x => Math.pow(x - mean, 2)).reduce((a, b) => a + b) / n);
+    return { mean, stdDev };
+};
+
 module.exports = (pool) => {
 
     /**
      * FEATURE 1: Predictive Low-Stock
      * GET /api/analytics/low-stock-predictions
-     * Analyzes stock-out velocity over the last 30 days to predict
-     * when items will run out of stock.
      */
     router.get('/low-stock-predictions', isAuthenticated, async (req, res) => {
         console.log('📈 Generating low-stock predictions...');
         
         try {
-            // 1. Get the full chain
             const chainResult = await pool.query(`${SELECT_BLOCKCHAIN_FIELDS} ORDER BY index ASC`);
             const currentChain = chainResult.rows;
 
             if (currentChain.length <= 1) {
-                return res.json([]); // Not enough data
+                return res.json([]);
             }
 
-            // 2. Rebuild the CURRENT inventory state
             const { inventory } = rebuildStateAt(currentChain, new Date().toISOString());
             
-            // 3. Calculate STOCK_OUT velocity for the last 30 days
             const thirtyDaysAgo = new Date();
             thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
             
-            const velocityMap = new Map(); // Map<itemSku, totalStockOut>
+            const velocityMap = new Map();
 
             currentChain.forEach(block => {
                 const tx = block.transaction;
@@ -62,9 +66,8 @@ module.exports = (pool) => {
                 }
             });
 
-            // 4. Generate predictions
             const predictions = [];
-            const PREDICTION_THRESHOLD_DAYS = 7; // Warn if stock will be low within 7 days
+            const PREDICTION_THRESHOLD_DAYS = 7; 
 
             inventory.forEach((product, sku) => {
                 let totalStock = 0;
@@ -72,7 +75,7 @@ module.exports = (pool) => {
 
                 const totalStockOut = velocityMap.get(sku) || 0;
                 
-                if (totalStockOut > 0) { // Only predict if there is velocity
+                if (totalStockOut > 0) {
                     const dailyVelocity = totalStockOut / 30;
                     const daysToEmpty = Math.floor(totalStock / dailyVelocity);
 
@@ -87,7 +90,6 @@ module.exports = (pool) => {
                 }
             });
 
-            // Sort by most urgent
             predictions.sort((a, b) => a.daysToEmpty - b.daysToEmpty);
             
             console.log(`✅ Found ${predictions.length} proactive warnings.`);
@@ -100,61 +102,144 @@ module.exports = (pool) => {
     });
 
     /**
-     * FEATURE 2: Anomaly Detection
-     * GET /api/analytics/anomalies
-     * Scans the entire blockchain for transactions that are
-     * technically valid but break business logic rules.
+     * FEATURE 2: Dedicated Anomaly Report (NEW)
+     * GET /api/analytics/anomalies-report
+     * Scans the entire blockchain for multiple types of anomalies
      */
-    router.get('/anomalies', isAuthenticated, async (req, res) => {
-        console.log('🛡️ Running anomaly detection scan...');
+    router.get('/anomalies-report', isAuthenticated, async (req, res) => {
+        console.log('🛡️ Running full anomaly detection report...');
         
-        // This feature is for auditors/admins
         if (req.session.user.role !== 'Admin' && req.session.user.role !== 'Auditor') {
             return res.status(403).json({ message: 'Forbidden: Admin or Auditor access required' });
         }
 
         try {
-            // 1. Get all users to map names to roles
-            const usersResult = await pool.query('SELECT name, role FROM users');
+            // 1. Get all users to map names to roles and track behavior
+            const usersResult = await pool.query('SELECT id, name, role FROM users');
             const userRoleMap = new Map(usersResult.rows.map(u => [u.name, u.role]));
+            // Map<userId, Set<txType>>
+            const userBehaviorMap = new Map(usersResult.rows.map(u => [u.id, new Set()]));
             
             // 2. Get the full chain
             const chainResult = await pool.query(`${SELECT_BLOCKCHAIN_FIELDS} ORDER BY index ASC`);
-            const anomalies = [];
+            const chain = chainResult.rows;
+            
+            // Lists to store anomalies
+            const basicAnomalies = [];
+            const statisticalOutliers = [];
+            const behavioralAnomalies = [];
+            
+            // For statistical analysis
+            const quantities = {
+                'CREATE_ITEM': [],
+                'STOCK_IN': [],
+                'STOCK_OUT': [],
+                'MOVE': []
+            };
 
-            // 3. Define and run rules against every block
-            for (const block of chainResult.rows) {
-                if (block.index === 0) continue; // Skip Genesis
+            // First pass: get all quantities to calculate stats
+            for (const block of chain) {
+                if (block.index === 0) continue;
+                const tx = block.transaction;
+                if (quantities[tx.txType]) {
+                    quantities[tx.txType].push(tx.quantity);
+                }
+            }
+            
+            // Calculate stats for transaction types
+            const stats = {};
+            for (const txType in quantities) {
+                const { mean, stdDev } = getStdDev(quantities[txType]);
+                stats[txType] = { mean, stdDev, threshold: mean + (3 * stdDev) }; // 3-sigma rule
+            }
+
+            // Second pass: apply all rules
+            for (const block of chain) {
+                if (block.index === 0) continue; 
 
                 const tx = block.transaction;
                 const reasons = [];
 
-                // Rule 1: Unusual Time (10 PM - 6 AM UTC)
+                // --- Rule Set 1: Business Logic ---
                 const hour = new Date(block.timestamp).getUTCHours();
                 if (hour < 6 || hour > 22) {
                     reasons.push(`Transaction occurred at an unusual time (${hour}:00 UTC).`);
                 }
                 
-                // Rule 2: Unusual Role for Action
                 const userRole = userRoleMap.get(tx.userName);
                 if (tx.txType === 'MOVE' && userRole === 'Admin') {
-                    reasons.push(`MOVE operation performed by an Admin, not a Manager.`);
+                    reasons.push(`Logistics (MOVE) operation performed by an Admin, not a Manager.`);
                 }
-
-                // Rule 3: Unusual Logistics (Supplier -> Retailer)
+                
                 if (tx.txType === 'MOVE' && tx.fromLocation === 'Supplier' && tx.toLocation === 'Retailer') {
                     reasons.push(`Logistics anomaly: Skipped Warehouse (Supplier -> Retailer).`);
                 }
-                
-                // If any rules were triggered, add to list
+
                 if (reasons.length > 0) {
-                    anomalies.push({ block, reasons });
+                    basicAnomalies.push({ block, reasons });
+                }
+
+                // --- Rule Set 2: Statistical Outlier ---
+                const stat = stats[tx.txType];
+                if (stat && tx.quantity > stat.threshold && tx.quantity > 10) { // Check vs threshold and a min value
+                    statisticalOutliers.push({
+                        block,
+                        reasons: [`Quantity (${tx.quantity}) is a statistical outlier ( > 3x std. dev.) for ${tx.txType} transactions.`]
+                    });
+                }
+                
+                // --- Rule Set 3: Behavioral Anomaly ---
+                const userHistory = userBehaviorMap.get(tx.userId);
+                
+                // First, check if this is the first time this user has EVER done this
+                if (userHistory && !userHistory.has(tx.txType)) {
+                    // It's the first time. Is this action unusual for their role?
+                    let isUnusual = false;
+                    switch (userRole) {
+                        case 'Auditor':
+                            isUnusual = true; // Auditors should not be performing ANY transactions
+                            break;
+                        case 'Inventory Manager':
+                            if (tx.txType === 'CREATE_ITEM') isUnusual = true; // Managers shouldn't create items
+                            break;
+                        case 'Admin':
+                            isUnusual = false; // Admins can do anything
+                            break;
+                    }
+
+                    if (isUnusual) {
+                        behavioralAnomalies.push({
+                            block,
+                            reasons: [`First time user '${tx.userName}' (Role: ${userRole}) performed a '${tx.txType}' action.`]
+                        });
+                    }
+                }
+                // Add this action to their history
+                if (userHistory) {
+                    userHistory.add(tx.txType);
                 }
             }
             
-            console.log(`✅ Anomaly scan complete. Found ${anomalies.length} flags.`);
-            // Return newest anomalies first
-            res.status(200).json(anomalies.reverse());
+            const totalTransactions = chain.length - 1;
+            const allAnomalies = new Set([
+                ...basicAnomalies.map(a => a.block.hash),
+                ...statisticalOutliers.map(a => a.block.hash),
+                ...behavioralAnomalies.map(a => a.block.hash)
+            ]);
+            const totalAnomalies = allAnomalies.size;
+
+            console.log(`✅ Full anomaly scan complete. Found ${totalAnomalies} unique flags.`);
+            
+            res.status(200).json({
+                summary: {
+                    totalAnomalies: totalAnomalies,
+                    totalTransactions: totalTransactions,
+                    percentOfTransactionsFlagged: (totalAnomalies / totalTransactions) * 100
+                },
+                basicAnomalies: basicAnomalies.reverse(),
+                statisticalOutliers: statisticalOutliers.reverse(),
+                behavioralAnomalies: behavioralAnomalies.reverse()
+            });
 
         } catch (e) {
             console.error('❌ Error scanning for anomalies:', e);
