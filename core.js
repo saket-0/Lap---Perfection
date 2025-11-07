@@ -6,7 +6,7 @@ let inventory = new Map(); // The "World State"
 let currentUser = null;
 
 // Define the base URL for your backend server
-const API_BASE_URL = 'http://127.0.0.1:3000';
+// const API_BASE_URL = 'http://127.0.0.1:3000';
 
 // --- SERVICES (Simulating Backend Logic) ---
 
