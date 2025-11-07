@@ -96,11 +96,8 @@ const renderDashboard = async () => {
     } else if (lowStockContainer) {
         lowStockContainer.style.display = 'none';
     }
-    // --- END OF MODIFIED SECTION ---
 };
 
-// ... (keep all other functions as-is)
-// renderProductList, renderProductDetail, etc.
 
 const renderProductList = () => {
     const appContent = document.getElementById('app-content');
@@ -198,17 +195,6 @@ const renderProductDetail = (productId) => {
     const stockLevelsDiv = appContent.querySelector('#detail-stock-levels');
     stockLevelsDiv.innerHTML = '';
     let totalStock = 0;
-
-    // ["Supplier", "Warehouse", "Retailer"].forEach(location => {
-    //     const qty = product.locations.get(location) || 0;
-    //     totalStock += qty;
-    //     stockLevelsDiv.innerHTML += `
-    //         <div class="flex justify-between items-center text-sm">
-    //             <span class="text-slate-600">${location}:</span>
-    //             <span class="font-medium text-slate-800">${qty} units</span>
-    //         </div>`;
-    // });
-
 
     // --- REPLACE THE HARD-CODED ["Supplier", "Warehouse", "Retailer"] ---
     const allProductLocations = new Set(globalLocations.map(l => l.name));

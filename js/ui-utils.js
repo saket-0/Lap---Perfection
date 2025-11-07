@@ -1,7 +1,5 @@
 // Lap/js/ui-utils.js
 
-// const API_BASE_URL = 'http://127.0.0.1:3000';
-
 // --- Toast/Notification Functions ---
 let errorTimer;
 const showError = (message, suppress = false) => {
@@ -126,8 +124,6 @@ const populateLoginDropdown = async () => {
     }
 };
 
-// Lap/js/ui-utils.js
-// ... (at the end of the file)
 
 const populateLocationDropdown = (selectElement) => {
     if (!selectElement) return;

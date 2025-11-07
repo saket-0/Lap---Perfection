@@ -106,9 +106,6 @@ async function isChainValid(blockchainArray) {
 }
 
 
-// --- (The rest of the file is unchanged, including the fix for validateTransaction) ---
-
-
 /**
  * This is the server-side validator, moved from core.js
  * It rebuilds the state from the chain and validates a new transaction.
@@ -244,5 +241,5 @@ module.exports = {
     createGenesisBlock,
     isChainValid,
     validateTransaction,
-    rebuildStateAt // <-- Added new export
+    rebuildStateAt 
 };

@@ -1,7 +1,5 @@
 // Lap/js/form-handlers.js
 
-// const API_BASE_URL = 'http://127.0.0.1:3000';
-
 const handleAddItem = async (form) => {
     if (!permissionService.can('CREATE_ITEM')) return showError("Access Denied.");
 
@@ -269,9 +267,6 @@ const handleSnapshotForm = async (form, navigateTo) => {
         button.innerHTML = '<i class="ph-bold ph-timer"></i> Generate Snapshot';
     }
 };
-
-// Lap/js/form-handlers.js
-// ... (at the end of the file)
 
 // --- LOCATION HANDLERS ---
 const handleAddLocation = async (form) => {

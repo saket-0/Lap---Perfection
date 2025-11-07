@@ -4,8 +4,8 @@
 let blockchain = [];
 let inventory = new Map(); // The "World State"
 let currentUser = null;
-let globalLocations = []; // <-- ADD THIS
-let globalCategories = []; // <-- ADD THIS
+let globalLocations = []; 
+let globalCategories = []; 
 
 // Define the base URL for your backend server
 // const API_BASE_URL = 'http://127.0.0.1:3000';
@@ -193,7 +193,7 @@ const addTransactionToChain = async (transaction) => {
 
 
 /**
- * UNCHANGED: This logic is still needed on the client-side for two reasons:
+ * This logic is still needed on the client-side for two reasons:
  * 1. To run a "pre-check" in the UI before sending to the server.
  * 2. To run inside rebuildInventoryState() to build the local inventory map.
  */
@@ -261,13 +261,6 @@ const processTransaction = (transaction, suppressErrors = false, showErrorCallba
     return false;
 };
 
-// --- INITIALIZATION & DB HELPERS ---
-
-/**
- * REMOVED: saveBlockchain() is no longer needed.
- */
-// const saveBlockchain = () => { ... }
-
 /**
  * MODIFIED: Loads the blockchain from the server API.
  */
@@ -299,10 +292,6 @@ const loadBlockchain = async () => {
     }
 };
 
-/**
- * UNCHANGED: This is still needed to build the client-side inventory state
- * after the blockchain is loaded from the server.
- */
 const rebuildInventoryState = () => {
     inventory.clear();
     for (let i = 1; i < blockchain.length; i++) { // Skip Genesis

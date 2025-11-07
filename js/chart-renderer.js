@@ -65,23 +65,6 @@ const renderItemStockChart = (productId) => {
     currentCharts.push(stockChart);
 };
 
-// const renderAnalyticsPage = () => {
-//     renderTxVelocityChart();
-//     renderInventoryDistributionChart();
-//     renderTxHeatmapChart();
-//     renderInventoryCategoryChart();
-// };
-
-// // This is the new, correct code
-// const renderAnalyticsPage = async () => {
-//     renderTxVelocityChart();
-//     renderInventoryDistributionChart();
-//     renderTxHeatmapChart();
-//     renderInventoryCategoryChart();
-    
-//     // Add call to new anomaly renderer
-//     await renderAnomalyList();
-// };
 
 const renderAnalyticsPage = () => {
     // This is no longer async
@@ -92,60 +75,6 @@ const renderAnalyticsPage = () => {
     renderInventoryCategoryChart();
 };
 
-// // New function to fetch and render anomalies
-// const renderAnomalyList = async () => {
-//     const anomalyList = document.getElementById('anomaly-list');
-//     const emptyMessage = document.getElementById('anomaly-list-empty');
-//     if (!anomalyList || !emptyMessage) return;
-
-//     anomalyList.innerHTML = '<p class="text-sm text-slate-500">Scanning chain for anomalies...</p>';
-
-//     try {
-//         const response = await fetch(`${API_BASE_URL}/api/analytics/anomalies`, {
-//             credentials: 'include'
-//         });
-        
-//         if (!response.ok) {
-//             const err = await response.json();
-//             // Handle forbidden access for non-auditors
-//             if (response.status === 403) {
-//                 anomalyList.innerHTML = `<p class="text-sm text-yellow-700">${err.message}</p>`;
-//                 return;
-//             }
-//             throw new Error(err.message || 'Failed to load anomalies');
-//         }
-        
-//         const anomalies = await response.json();
-//         anomalyList.innerHTML = ''; // Clear loading message
-
-//         if (anomalies.length === 0) {
-//             emptyMessage.style.display = 'block';
-//         } else {
-//             emptyMessage.style.display = 'none';
-//             anomalies.forEach(anomaly => {
-//                 // We can re-use the block element creator!
-//                 const blockElement = createLedgerBlockElement(anomaly.block);
-                
-//                 // Add a red border and the reasons
-//                 blockElement.classList.add('border-red-300', 'border-2');
-                
-//                 const reasonsList = anomaly.reasons.map(reason => 
-//                     `<li class="text-xs font-medium text-red-700">${reason}</li>`
-//                 ).join('');
-
-//                 blockElement.innerHTML += `
-//                     <ul class="mt-2 list-disc list-inside space-y-1">
-//                         ${reasonsList}
-//                     </ul>
-//                 `;
-//                 anomalyList.appendChild(blockElement);
-//             });
-//         }
-//     } catch (error) {
-//         console.error(error.message);
-//         anomalyList.innerHTML = `<p class="text-sm text-red-600">Error loading anomalies: ${error.message}</p>`;
-//     }
-// };
 
 const renderTxVelocityChart = () => {
     const labels = [];

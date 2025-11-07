@@ -10,8 +10,8 @@ const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/users');
 const blockchainRoutes = require('./routes/blockchain');
 const analyticsRoutes = require('./routes/analytics');
-const locationRoutes = require('./routes/locations'); // <-- ADD
-const categoryRoutes = require('./routes/categories'); // <-- ADD
+const locationRoutes = require('./routes/locations'); 
+const categoryRoutes = require('./routes/categories'); 
 
 const app = express();
 const port = 3000;
@@ -93,8 +93,8 @@ app.use('/api/auth', authRoutes(pool));
 app.use('/api/users', userRoutes(pool));
 app.use('/api/blockchain', blockchainRoutes(pool));
 app.use('/api/analytics', analyticsRoutes(pool));
-app.use('/api/locations', locationRoutes(pool)); // <-- ADD
-app.use('/api/categories', categoryRoutes(pool)); // <-- ADD
+app.use('/api/locations', locationRoutes(pool)); 
+app.use('/api/categories', categoryRoutes(pool)); 
 
 
 // --- 8. Start Server ---
