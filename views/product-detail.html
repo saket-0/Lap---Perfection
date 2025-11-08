@@ -1,0 +1,124 @@
+<div class="space-y-8">
+    <div>
+        <button id="back-to-list-button" class="inline-flex items-center gap-2 text-sm font-medium text-indigo-600 hover:text-indigo-800">
+            <i class="ph-bold ph-arrow-left"></i>
+            Back to All Products
+        </button>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div class="lg:col-span-2 space-y-8">
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <div class="flex flex-col md:flex-row gap-6">
+                    <div class="w-full md:w-1/3 h-48 bg-slate-200 rounded-lg flex items-center justify-center">
+                        <i class="ph-bold ph-package text-slate-400 text-6xl"></i>
+                    </div>
+                    <div class="w-full md:w-2/3">
+                        <h2 id="detail-product-name" class="text-4xl font-bold text-slate-900">Product Name</h2>
+                        <p id="detail-product-id" class="text-sm text-slate-500 mt-1">SKU-000</p>
+                        <p id="detail-product-category" class="text-sm font-medium text-indigo-600 bg-indigo-100 px-2 py-0.5 rounded-full inline-block mt-2">Category</p>
+                        <p id="detail-product-price" class="text-3xl font-bold text-slate-700 mt-2">₹0.00</p>
+                        <hr class="my-4">
+                        <h3 class="text-lg font-semibold text-slate-800 mb-2">Current Stock Levels</h3>
+                        <div id="detail-stock-levels" class="space-y-2">
+                            </div>
+                        <hr class="my-4">
+                        <div class="flex justify-between items-center">
+                            <span class="text-lg font-semibold text-slate-800">Total Stock:</span>
+                            <span id="detail-total-stock" class="text-2xl font-bold text-indigo-600">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="update-stock-container" class="bg-white p-6 rounded-lg shadow-md space-y-8">
+                <div>
+                    <h2 class="text-2xl font-semibold mb-4 text-slate-800">Update Stock (Add/Remove)</h2>
+                    <p class="text-sm text-slate-500 mb-4">Add or remove stock from a single location.</p>
+                    <form id="update-stock-form" class="space-y-4">
+                        <input type="hidden" id="update-product-id" value="">
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="update-quantity" class="block text-sm font-medium text-slate-700">Quantity</label>
+                                <select id="update-quantity" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                    <option>1</option>
+                                    <option>5</option>
+                                    <option selected>10</option>
+                                    <option>25</option>
+                                    <option>50</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label for="update-location" class="block text-sm font-medium text-slate-700">Location</label>
+                                <select id="update-location" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                    </select>
+                            </div>
+                            </div>
+
+                        <div class="flex flex-col sm:flex-row gap-4">
+                            <button type="submit" id="stock-in-button" data-action="STOCK_IN" class="w-full bg-green-600 text-white py-2 px-6 rounded-md shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 flex items-center justify-center gap-2">
+                                <i class="ph-bold ph-plus-circle"></i>
+                                Add Stock
+                            </button>
+                            <button type="submit" id="stock-out-button" data-action="STOCK_OUT" class="w-full bg-red-600 text-white py-2 px-6 rounded-md shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 flex items-center justify-center gap-2">
+                                <i class="ph-bold ph-minus-circle"></i>
+                                Remove Stock
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="border-t border-slate-200 pt-6">
+                    <h2 class="text-2xl font-semibold mb-4 text-slate-800">Move Stock</h2>
+                    <p class="text-sm text-slate-500 mb-4">Transfer stock between two locations.</p>
+                    <form id="move-stock-form" class="space-y-4">
+                        <div>
+                            <label for="move-quantity" class="block text-sm font-medium text-slate-700">Quantity</label>
+                            <select id="move-quantity" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                <option>1</option>
+                                <option>5</option>
+                                <option selected>10</option>
+                                <option>25</option>
+                                <option>50</option>
+                            </select>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            
+                            <div>
+                                <label for="move-from-location" class="block text-sm font-medium text-slate-700">From Location</label>
+                                <select id="move-from-location" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                    </select>
+                            </div>
+                            <div>
+                                <label for="move-to-location" class="block text-sm font-medium text-slate-700">To Location</label>
+                                <select id="move-to-location" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                    </select>
+                            </div>
+                            </div>
+                        <button type="submit" class="w-full bg-blue-600 text-white py-2 px-6 rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 flex items-center justify-center gap-2">
+                            <i class="ph-bold ph-arrows-left-right"></i>
+                            Move Stock
+                        </button>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <h2 class="text-2xl font-semibold mb-4 text-slate-800">Verifiable Stock History</h2>
+                <canvas id="item-stock-chart"></canvas>
+            </div>
+
+        </div>
+
+        <div class="lg:col-span-1">
+            <div class="bg-white p-6 rounded-lg shadow-md sticky top-8">
+                <h2 class="text-2xl font-semibold mb-4 text-slate-800">Item History</h2>
+                <p class="text-sm text-slate-500 mb-4">Immutable transaction log for this item.</p>
+                <div id="item-history-display" class="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
+                    </div>
+            </div>
+        </div>
+    </div>
+</div>

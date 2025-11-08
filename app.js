@@ -13,7 +13,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const appContent = document.getElementById('app-content');
     const logoutButton = document.getElementById('logout-button');
     
-    // *** UPDATED navLinks ORDER ***
     const navLinks = {
         dashboard: document.getElementById('nav-dashboard'),
         products: document.getElementById('nav-products'),
@@ -23,17 +22,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         ledger: document.getElementById('nav-ledger'),
         profile: document.getElementById('nav-profile'),
     };
-    const templates = {
-        dashboard: document.getElementById('dashboard-view-template'),
-        profile: document.getElementById('profile-view-template'),
-        productList: document.getElementById('product-list-view-template'),
-        productDetail: document.getElementById('product-detail-view-template'),
-        analytics: document.getElementById('analytics-view-template'),
-        anomaly: document.getElementById('anomaly-view-template'),
-        admin: document.getElementById('admin-view-template'),
-        ledger: document.getElementById('ledger-view-template'),
-        snapshot: document.getElementById('snapshot-view-template'),
-    };
+    
+    // --- TEMPLATES OBJECT IS REMOVED ---
     
     // --- NAVIGATION & UI CONTROL ---
     const showLogin = () => {
@@ -61,81 +51,74 @@ document.addEventListener('DOMContentLoaded', async () => {
         navigateTo('dashboard');
     };
 
-    const navigateTo = async (view, context = {}) => {
-        // Destroy old charts (function from chart-renderer.js)
-        destroyCurrentCharts();
+    /**
+     * NEW: Fetches an HTML view from the server.
+     * @param {string} viewName - The name of the html file (e.g., 'dashboard')
+     * @returns {Promise<string>} HTML content as a string.
+     */
+    const loadView = async (viewName) => {
+        try {
+            const response = await fetch(`views/${viewName}.html`);
+            if (!response.ok) {
+                throw new Error(`Failed to load view: ${viewName}.html`);
+            }
+            return await response.text();
+        } catch (error) {
+            console.error(error);
+            // Use the global showError utility from ui-utils.js
+            showError(error.message);
+            return `<p class="text-red-600 p-4">Error loading view: ${error.message}. Please try again.</p>`;
+        }
+    };
 
-        appContent.innerHTML = '';
+    /**
+     * UPDATED: Rewritten to fetch views dynamically.
+     */
+    const navigateTo = async (view, context = {}) => {
+        // 1. Clear state
+        destroyCurrentCharts();
+        appContent.innerHTML = ''; // Clear content
         Object.values(navLinks).forEach(link => link.classList.remove('active'));
 
-        let viewTemplate;
-        switch (view) {
-            case 'products':
-                navLinks.products.classList.add('active');
-                viewTemplate = templates.productList.content.cloneNode(true);
-                appContent.appendChild(viewTemplate);
-                renderProductList();
-                break;
-            
-            case 'detail':
-                navLinks.products.classList.add('active');
-                viewTemplate = templates.productDetail.content.cloneNode(true);
-                appContent.appendChild(viewTemplate);
-                renderProductDetail(context.productId);
-                break;
+        // 2. Define all views, their files, render functions, and permissions
+        const viewMap = {
+            'dashboard': { file: 'dashboard', renderer: renderDashboard, nav: navLinks.dashboard },
+            'products': { file: 'product-list', renderer: renderProductList, nav: navLinks.products },
+            'detail': { file: 'product-detail', renderer: () => renderProductDetail(context.productId), nav: navLinks.products },
+            'admin': { file: 'admin', renderer: renderAdminPanel, nav: navLinks.admin, permission: 'VIEW_ADMIN_PANEL' },
+            'ledger': { file: 'ledger', renderer: renderFullLedger, nav: navLinks.ledger, permission: 'VIEW_LEDGER' },
+            'analytics': { file: 'analytics', renderer: renderAnalyticsPage, nav: navLinks.analytics },
+            'anomaly': { file: 'anomaly', renderer: renderAnomalyPage, nav: navLinks.anomaly, permission: 'VIEW_LEDGER' },
+            'profile': { file: 'profile', renderer: renderProfilePage, nav: navLinks.profile },
+            'snapshot': { file: 'snapshot', renderer: () => renderSnapshotView(context.snapshotData), nav: navLinks.ledger }
+        };
 
-            case 'admin':
-                if (!permissionService.can('VIEW_ADMIN_PANEL')) return navigateTo('dashboard');
-                navLinks.admin.classList.add('active');
-                viewTemplate = templates.admin.content.cloneNode(true);
-                appContent.appendChild(viewTemplate);
-                renderAdminPanel();
-                break;
+        // 3. Get the configuration for the requested view, or default to dashboard
+        let viewConfig = viewMap[view] || viewMap.dashboard;
 
-            case 'ledger':
-                if (!permissionService.can('VIEW_LEDGER')) return navigateTo('dashboard');
-                navLinks.ledger.classList.add('active');
-                viewTemplate = templates.ledger.content.cloneNode(true);
-                appContent.appendChild(viewTemplate);
-                renderFullLedger();
-                break;
-            
-            case 'analytics':
-                navLinks.analytics.classList.add('active');
-                viewTemplate = templates.analytics.content.cloneNode(true);
-                appContent.appendChild(viewTemplate);
-                await renderAnalyticsPage();
-                break;
+        // 4. Check permissions
+        if (viewConfig.permission && !permissionService.can(viewConfig.permission)) {
+            showError("Access Denied.");
+            return navigateTo('dashboard'); // Redirect to dashboard
+        }
 
-            case 'anomaly':
-                if (!permissionService.can('VIEW_LEDGER')) return navigateTo('dashboard');
-                navLinks.anomaly.classList.add('active');
-                viewTemplate = templates.anomaly.content.cloneNode(true);
-                appContent.appendChild(viewTemplate);
-                await renderAnomalyPage();
-                break;
-            
-            case 'profile':
-                navLinks.profile.classList.add('active');
-                viewTemplate = templates.profile.content.cloneNode(true);
-                appContent.appendChild(viewTemplate);
-                await renderProfilePage();
-                break;
+        // 5. Set active nav link
+        if (viewConfig.nav) {
+            viewConfig.nav.classList.add('active');
+        }
 
-            case 'snapshot':
-                navLinks.ledger.classList.add('active');
-                viewTemplate = templates.snapshot.content.cloneNode(true);
-                appContent.appendChild(viewTemplate);
-                renderSnapshotView(context.snapshotData);
-                break;
+        // 6. Fetch and inject the HTML
+        const htmlContent = await loadView(viewConfig.file);
+        appContent.innerHTML = htmlContent;
 
-            case 'dashboard':
-            default:
-                navLinks.dashboard.classList.add('active');
-                viewTemplate = templates.dashboard.content.cloneNode(true);
-                appContent.appendChild(viewTemplate);
-                await renderDashboard();
-                break;
+        // 7. Call the corresponding render function *after* HTML is in the DOM
+        try {
+            if (viewConfig.renderer) {
+                await viewConfig.renderer();
+            }
+        } catch (error) {
+            console.error(`Error rendering view ${view}:`, error);
+            showError(`Error rendering ${view} page: ${error.message}`);
         }
     };
     

@@ -1,0 +1,19 @@
+<div class="space-y-8">
+    <h1 class="text-4xl font-bold text-slate-800">Anomaly Detection Report</h1>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-white p-6 rounded-lg shadow-md">
+            <h3 class="text-sm font-medium text-slate-500 uppercase">Total Anomalies Flagged</h3>
+            <p id="kpi-total-anomalies" class="text-4xl font-bold text-red-600">0</p>
+            <p class="text-xs text-slate-400 mt-1">Unique transactions flagged</p>
+        </div>
+        <div class="bg-white p-6 rounded-lg shadow-md">
+            <h3 classs="text-sm font-medium text-slate-500 uppercase">% of Transactions Flagged</h3>
+            <p id="kpi-percent-flagged" class="text-4xl font-bold text-red-600">0%</p>
+            <p class="text-xs text-slate-400 mt-1">Flagged blocks vs. total blocks</p>
+        </div>
+    </div>
+
+    <div id="anomaly-list-container" class="space-y-8">
+        </div>
+</div>

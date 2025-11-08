@@ -1,0 +1,35 @@
+<div class="space-y-8">
+    <div class="p-4 bg-yellow-100 border border-yellow-300 rounded-lg">
+        <h1 class="text-3xl font-bold text-yellow-900">
+            Read-Only Inventory Snapshot
+        </h1>
+        <p class="text-lg font-medium text-yellow-800">
+            Viewing state as of: <strong id="snapshot-time-display"></strong>
+        </p>
+        <button id="back-to-ledger-button" class="mt-2 inline-flex items-center gap-2 text-sm font-medium text-indigo-600 hover:text-indigo-800">
+            <i class="ph-bold ph-arrow-left"></i>
+            Back to Full Ledger
+        </button>
+    </div>
+    
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="bg-white p-6 rounded-lg shadow-md opacity-80">
+            <h3 class="text-sm font-medium text-slate-500 uppercase">Total Value (at time)</h3>
+            <p id="kpi-snapshot-total-value" class="text-4xl font-bold text-indigo-600">₹0.00</p>
+        </div>
+        <div class="bg-white p-6 rounded-lg shadow-md opacity-80">
+            <h3 class="text-sm font-medium text-slate-500 uppercase">Total Units (at time)</h3>
+            <p id="kpi-snapshot-total-units" class="text-4xl font-bold text-indigo-600">0</p>
+        </div>
+        <div class="bg-white p-6 rounded-lg shadow-md opacity-80">
+            <h3 class="text-sm font-medium text-slate-500 uppercase">Transactions (at time)</h3>
+            <p id="kpi-snapshot-transactions" class="text-4xl font-bold text-indigo-600">0</p>
+        </div>
+    </div>
+
+    <div>
+        <h2 class="text-3xl font-semibold text-slate-800 mb-4">Products in System (at time)</h2>
+        <div id="snapshot-product-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            </div>
+    </div>
+</div>

@@ -1,0 +1,27 @@
+<div class="space-y-8">
+    <h1 class="text-4xl font-bold text-slate-800">Full Blockchain Ledger</h1>
+
+    <div id="snapshot-form-container" class="bg-white p-6 rounded-lg shadow-md" style="display: none;">
+        <h2 class="text-2xl font-semibold mb-4 text-slate-800">Time-Travel Audit</h2>
+        <p class="text-sm text-slate-500 mb-4">
+            Select a date and time to generate a verifiable, read-only snapshot
+            of the entire inventory state as it existed at that moment.
+        </p>
+        <form id="snapshot-form" class="flex flex-col md:flex-row items-end gap-4">
+            <div class="flex-1 w-full">
+                <label for="snapshot-timestamp" class="block text-sm font-medium text-slate-700">Snapshot Date & Time</label>
+                <input type="datetime-local" id="snapshot-timestamp" class="form-input-underline" required>
+            </div>
+            <button type="submit" id="generate-snapshot-button" class="w-full md:w-auto bg-teal-600 text-white py-2 px-6 rounded-md shadow-sm hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 flex items-center justify-center gap-2">
+                <i class="ph-bold ph-timer"></i>
+                Generate Snapshot
+            </button>
+        </form>
+    </div>
+
+    <p class="text-lg text-slate-600">The immutable history of all transactions (Newest block on top).</p>
+    <div class="bg-white p-6 rounded-lg shadow-md">
+        <div id="full-ledger-display" class="space-y-4 max-h-[80vh] overflow-y-auto pr-2">
+            </div>
+    </div>
+</div>

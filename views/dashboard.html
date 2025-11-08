@@ -1,0 +1,62 @@
+<div class="space-y-8">
+    <h1 class="text-4xl font-bold text-slate-800">Dashboard</h1>
+    
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="bg-white p-6 rounded-lg shadow-md">
+            <h3 class="text-sm font-medium text-slate-500 uppercase">Total Value</h3>
+            <p id="kpi-total-value" class="text-4xl font-bold text-indigo-600">₹0.00</p>
+            <p class="text-xs text-slate-400 mt-1">Inventory valuation</p>
+        </div>
+        <div class="bg-white p-6 rounded-lg shadow-md">
+            <h3 class="text-sm font-medium text-slate-500 uppercase">Total Units</h3>
+            <p id="kpi-total-units" class="text-4xl font-bold text-indigo-600">0</p>
+            <p class="text-xs text-slate-400 mt-1">All units across all locations</p>
+        </div>
+        <div class="bg-white p-6 rounded-lg shadow-md">
+            <h3 class="text-sm font-medium text-slate-500 uppercase">Transactions</h3>
+            <p id="kpi-transactions" class="text-4xl font-bold text-indigo-600">0</p>
+            <p class="text-xs text-slate-400 mt-1">Blockchain records</p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div id="recent-activity-container" class="bg-white p-6 rounded-lg shadow-md">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-semibold text-slate-800">Recent Activity</h2>
+                <a href="#" id="dashboard-view-ledger" class="text-sm font-medium text-indigo-600 hover:text-indigo-800">View Full Ledger &rarr;</a>
+            </div>
+            <div id="recent-activity-list" class="space-y-4 max-h-96 overflow-y-auto pr-2">
+                </div>
+            <p id="recent-activity-empty" class="text-sm text-slate-500" style="display: none;">No transactions found.</p>
+        </div>
+
+        <div id="low-stock-container" class="bg-white p-6 rounded-lg shadow-md">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-semibold text-slate-800">Low Stock Items</h2>
+                <span id="low-stock-threshold-label" class="text-sm font-medium text-slate-500"></span>
+            </div>
+            <div id="low-stock-list" class="space-y-3 max-h-96 overflow-y-auto pr-2">
+                </div>
+            <p id="low-stock-empty" class="text-sm text-slate-500" style="display: none;">All items are well-stocked.</p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-white p-6 rounded-lg shadow-md">
+            <h2 class="text-2xl font-semibold mb-4 text-slate-800">Database Options</h2>
+            <p class="text-sm text-slate-500 mb-4">The blockchain is saved on the server.</p>
+            <button id="clear-db-button" class="w-full bg-red-600 text-white py-2 px-4 rounded-md shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 flex items-center justify-center gap-2">
+                <i class="ph-bold ph-trash"></i>
+                Clear Server Database & Reset
+            </button>
+        </div>
+        <div class="bg-white p-6 rounded-lg shadow-md">
+            <h2 class="text-2xl font-semibold mb-4 text-slate-800">Chain Integrity</h2>
+            <p class="text-sm text-slate-500 mb-4">Verify the immutability of the server's ledger.</p>
+            <button id="verify-chain-button" class="w-full bg-teal-600 text-white py-2 px-4 rounded-md shadow-sm hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 flex items-center justify-center gap-2">
+                <i class="ph-bold ph-check-shield"></i>
+                Verify Blockchain
+            </button>
+        </div>
+    </div>
+</div>
