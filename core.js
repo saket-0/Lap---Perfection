@@ -6,6 +6,7 @@ let inventory = new Map(); // The "World State"
 let currentUser = null;
 let globalLocations = []; 
 let globalCategories = []; 
+let newProductCounter = 1; // <-- ADDED THIS LINE
 
 // Define the base URL for your backend server
 // const API_BASE_URL = 'http://127.0.0.1:3000';
@@ -115,6 +116,7 @@ const authService = {
             console.error('Error logging out:', error);
         } finally {
             currentUser = null;
+            newProductCounter = 1; // <-- ADDED: Reset counter on logout
             showLoginCallback();
         }
     }

@@ -7,21 +7,21 @@ body {
 #item-history-display::-webkit-scrollbar,
 #full-ledger-display::-webkit-scrollbar,
 #recent-activity-list::-webkit-scrollbar,
-/* *** Added low stock list *** */
+/* *** NEW: Added low stock list *** */
 #low-stock-list::-webkit-scrollbar {
     width: 6px;
 }
 #item-history-display::-webkit-scrollbar-track,
 #full-ledger-display::-webkit-scrollbar-track,
 #recent-activity-list::-webkit-scrollbar-track,
-/* *** Added low stock list *** */
+/* *** NEW: Added low stock list *** */
 #low-stock-list::-webkit-scrollbar-track {
     background: #f1f5f9; /* slate-100 */
 }
 #item-history-display::-webkit-scrollbar-thumb,
 #full-ledger-display::-webkit-scrollbar-thumb,
 #recent-activity-list::-webkit-scrollbar-thumb,
-/* *** Added low stock list *** */
+/* *** NEW: Added low stock list *** */
 #low-stock-list::-webkit-scrollbar-thumb {
     background: #94a3b8; /* slate-400 */
     border-radius: 3px;
@@ -123,7 +123,20 @@ body {
     white-space: nowrap;
 }
 
-/* *** Canvas and Chart Styles *** */
+/* *** NEW: Clickable stat item styles *** */
+.clickable-stat-item {
+    cursor: pointer;
+    padding: 0.25rem 0.5rem; /* Small padding for better hover */
+    margin: 0 -0.5rem; /* Offset padding */
+    border-radius: 0.25rem; /* 4px */
+    transition: background-color 0.2s ease-in-out;
+}
+.clickable-stat-item:hover {
+    background-color: #f1f5f9; /* slate-100 */
+}
+
+
+/* *** NEW: Canvas and Chart Styles *** */
 canvas {
     max-width: 100%;
     height: auto;
@@ -139,7 +152,7 @@ canvas {
 }
 
 
-/* *** Hide number input spinners *** */
+/* *** NEW: Hide number input spinners *** */
 /* For Chrome, Safari, Edge, Opera */
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
@@ -151,7 +164,7 @@ input[type=number] {
   -moz-appearance: textfield;
 }
 
-/* *** Underlined form inputs *** */
+/* *** NEW: Underlined form inputs *** */
 .form-input-underline {
     -webkit-appearance: none;
     -moz-appearance: none;
@@ -187,7 +200,7 @@ input[type=number] {
     /* *** MODIFIED: Reduced vertical padding *** */
     padding: 0.25rem 0.1rem;
     background-color: transparent;
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%logo%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
     background-position: right 0.5rem center;
     background-repeat: no-repeat;
     background-size: 1.5em 1.5em;

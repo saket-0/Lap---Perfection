@@ -305,6 +305,7 @@ const renderTransactionMixChart = (txMixData) => {
     currentCharts.push(pieChart);
 };
 
+// *** MODIFIED: Added class and data-product-id ***
 const renderTopMoversList = (topMovers) => {
     const container = document.getElementById('analytics-top-movers');
     if (!container) return;
@@ -317,7 +318,7 @@ const renderTopMoversList = (topMovers) => {
     
     topMovers.forEach(item => {
         container.innerHTML += `
-            <div class="flex justify-between items-center">
+            <div class="flex justify-between items-center clickable-stat-item" data-product-id="${item.sku}">
                 <span class="truncate" title="${item.name} (${item.sku})">${item.name}</span>
                 <span class="font-semibold text-indigo-600">${item.quantity} units</span>
             </div>
@@ -325,6 +326,7 @@ const renderTopMoversList = (topMovers) => {
     });
 };
 
+// *** MODIFIED: Added class and data-product-id ***
 const renderHighValueList = (highValueItems) => {
     const container = document.getElementById('analytics-high-value');
     if (!container) return;
@@ -337,7 +339,7 @@ const renderHighValueList = (highValueItems) => {
     
     highValueItems.forEach(item => {
         container.innerHTML += `
-            <div class="flex justify-between items-center">
+            <div class="flex justify-between items-center clickable-stat-item" data-product-id="${item.sku}">
                 <span class="truncate" title="${item.name} (${item.sku})">${item.name}</span>
                 <span class="font-semibold text-indigo-600">₹${item.value.toFixed(2)}</span>
             </div>
@@ -345,6 +347,7 @@ const renderHighValueList = (highValueItems) => {
     });
 };
 
+// *** MODIFIED: Added class and data-product-id ***
 const renderStaleInventoryList = (staleInventory) => {
     const container = document.getElementById('analytics-stale-inventory');
     if (!container) return;
@@ -357,7 +360,7 @@ const renderStaleInventoryList = (staleInventory) => {
     
     staleInventory.forEach(item => {
         container.innerHTML += `
-            <div class="flex justify-between items-center">
+            <div class="flex justify-between items-center clickable-stat-item" data-product-id="${item.sku}">
                 <span class="truncate" title="${item.name} (${item.sku})">${item.name}</span>
                 <span class="font-semibold text-red-600">${item.stock} units</span>
             </div>

@@ -224,6 +224,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
+        // *** NEW: Handle clicks on clickable stats ***
+        const clickableStat = e.target.closest('.clickable-stat-item');
+        if (clickableStat && clickableStat.dataset.productId) {
+            navigateTo('detail', { productId: clickableStat.dataset.productId });
+            return;
+        }
+        // *** END NEW ***
+
         if (e.target.closest('#clear-db-button')) {
             await handleClearDb(navigateTo);
         }

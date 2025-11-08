@@ -113,14 +113,18 @@ const renderProductList = () => {
     
     appContent.querySelector('#add-item-container').style.display = permissionService.can('CREATE_ITEM') ? 'block' : 'none';
     
-    // --- ADD THIS SECTION ---
+    // --- MODIFIED SECTION ---
     // Populate the "Add Product" form dropdowns
     const addForm = appContent.querySelector('#add-item-form');
     if (addForm) {
         populateLocationDropdown(addForm.querySelector('#add-to'));
         populateCategoryDropdown(addForm.querySelector('#add-product-category'));
+        
+        // *** MODIFIED: Set the unique SKU and serialized Name ***
+        addForm.querySelector('#add-product-id').value = generateUniqueSku();
+        addForm.querySelector('#add-product-name').value = `New Product ${newProductCounter}`;
     }
-    // --- END ADD ---
+    // --- END MODIFICATION ---
 
     let productsFound = 0;
 

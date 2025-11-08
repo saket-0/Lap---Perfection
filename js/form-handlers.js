@@ -14,6 +14,10 @@ const handleAddItem = async (form) => {
         return showError("Please fill out all fields with valid data (Price/Qty > 0).");
     }
     
+    // *** ADDED: Store the selected values before processing ***
+    const stickyCategory = category;
+    const stickyLocation = toLocation;
+    
     const transaction = {
         txType: "CREATE_ITEM", itemSku, itemName, quantity,
         price, category,
@@ -25,12 +29,23 @@ const handleAddItem = async (form) => {
     if (processTransaction(transaction, false, showError)) {
         try {
             await addTransactionToChain(transaction);
-            renderProductList();
+            renderProductList(); // This will re-render, but we'll fix the form values
             showSuccess(`Product ${itemName} added!`);
-            form.reset();
-            form.querySelector('#add-product-id').value = `SKU-${Math.floor(100 + Math.random() * 900)}`;
-            form.querySelector('#add-product-name').value = "New Product";
-            form.querySelector('#add-product-category').value = "Electronics";
+            
+            // --- MODIFIED: Form reset logic ---
+            form.reset(); // Clear basic fields like Qty and Price
+            
+            // Increment and set new serialized name
+            newProductCounter++;
+            form.querySelector('#add-product-name').value = `New Product ${newProductCounter}`;
+            
+            // Set new unique SKU
+            form.querySelector('#add-product-id').value = generateUniqueSku();
+            
+            // Re-apply sticky values
+            form.querySelector('#add-product-category').value = stickyCategory;
+            form.querySelector('#add-to').value = stickyLocation;
+            // --- END MODIFICATION ---
 
         } catch (error) {
             showError(`Server error: ${error.message}`);
