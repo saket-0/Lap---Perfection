@@ -217,35 +217,59 @@ module.exports = (pool) => {
         }
     });
 
-    // POST /api/users (For Admin Panel - Add User)
+    // *** MODIFIED ENDPOINT: POST /api/users (For Admin Panel - Add User) ***
     router.post('/', isAuthenticated, isAdmin, async (req, res) => {
         console.log('➕ Add user request');
         
-        const { name, email, employeeId, role, password } = req.body;
+        const { name, email, role, password } = req.body;
 
-        if (!name || !email || !employeeId || !role || !password) {
+        if (!name || !email || !role || !password) {
             console.log('❌ Missing required fields');
-            return res.status(400).json({ message: 'All fields are required' });
+            return res.status(400).json({ message: 'Name, email, role, and password are required' });
         }
 
         try {
+            // --- THIS IS THE FIXED LOGIC ---
+
+            // 1. Get the next ID from the sequence
+            // (Assuming default sequence name 'users_id_seq')
+            const idResult = await pool.query("SELECT nextval('users_id_seq') as id");
+            const newUserId = idResult.rows[0].id;
+            
+            // 2. Generate the new employee_id using this ID
+            const employeeId = `EMP-${String(newUserId).padStart(4, '0')}`;
+            
+            // 3. Hash the password
             const salt = await bcrypt.genSalt(10);
             const passwordHash = await bcrypt.hash(password, salt);
 
-            const result = await pool.query(
-                `INSERT INTO users (employee_id, name, email, role, password_hash)
-                VALUES ($1, $2, $3, $4, $5)
-                RETURNING id, employee_id, name, email, role`,
-                [employeeId, name, email, role, passwordHash]
+            // 4. Insert the complete record, including the manually fetched ID
+            //    and the generated employeeId.
+            await pool.query(
+                `INSERT INTO users (id, employee_id, name, email, role, password_hash)
+                VALUES ($1, $2, $3, $4, $5, $6)`,
+                [newUserId, employeeId, name, email, role, passwordHash]
             );
             
-            console.log('✅ User created:', result.rows[0].name);
-            res.status(201).json({ message: 'User created', user: result.rows[0] });
+            // 5. Fetch the final, complete user record to return
+            const finalResult = await pool.query(
+                'SELECT id, employee_id, name, email, role FROM users WHERE id = $1',
+                [newUserId]
+            );
+            // --- END OF FIXED LOGIC ---
+
+            console.log('✅ User created:', finalResult.rows[0].name);
+            res.status(201).json({ message: 'User created', user: finalResult.rows[0] });
         
         } catch (e) {
             if (e.code === '23505') {
-                console.log('❌ Duplicate email/employee ID');
-                return res.status(409).json({ message: 'Email or Employee ID already exists' });
+                console.log('❌ Duplicate email');
+                return res.status(409).json({ message: 'Email already exists' });
+            }
+            if (e.code === '42P01') {
+                // This means the sequence name 'users_id_seq' is wrong
+                console.error('Database error: Sequence "users_id_seq" not found.');
+                return res.status(500).json({ message: 'Database configuration error: User ID sequence not found.' });
             }
             console.error('❌ User creation error:', e);
             res.status(500).json({ message: e.message });

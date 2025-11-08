@@ -234,6 +234,7 @@ const handleDeleteProduct = async (productId, productName, navigateTo) => {
     }
 };
 
+
 // *** Helper function to log admin actions (to avoid repetition) ***
 const logAdminActionToBlockchain = async (transaction) => {
     try {
@@ -340,33 +341,46 @@ const handleEmailChange = async (userId, userName, newEmail, oldEmail, inputElem
     }
 };
 
-// *** MODIFIED ***
+// *** MODIFIED: THIS IS THE FIX ***
 const handleAddUser = async (form) => {
     if (!permissionService.can('MANAGE_USERS')) return showError("Access Denied.");
 
     const name = form.querySelector('#add-user-name').value;
     const email = form.querySelector('#add-user-email').value;
-    const employeeId = form.querySelector('#add-user-employee-id').value;
     const role = form.querySelector('#add-user-role').value;
     const password = form.querySelector('#add-user-password').value;
+    const confirmPassword = form.querySelector('#add-user-confirm-password').value;
+
+    // ** CLIENT-SIDE VALIDATION **
+    // This check is now robust.
+    if (!name || !email || !role || !password || !confirmPassword) {
+        return showError("All fields are required.");
+    }
+    if (password !== confirmPassword) {
+        return showError("Passwords do not match.");
+    }
+    // ** END VALIDATION **
 
     try {
+        // We only send name, email, role, and password.
+        // employeeId is NOT sent.
         const response = await fetch(`${API_BASE_URL}/api/users`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
-            body: JSON.stringify({ name, email, employeeId, role, password })
+            body: JSON.stringify({ name, email, role, password })
         });
         
         const data = await response.json();
         if (!response.ok) {
+            // This will now only show server errors (like "Email already exists")
             throw new Error(data.message || 'Failed to create user');
         }
         
         showSuccess(`User ${data.user.name} created successfully!`);
         form.reset();
         
-        // *** ADDED: Log to blockchain ***
+        // Log to blockchain (data.user contains the new generated employee_id)
         await logAdminActionToBlockchain({
             txType: "ADMIN_CREATE_USER",
             targetUserId: data.user.id,
