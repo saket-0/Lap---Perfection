@@ -59,7 +59,15 @@ const renderItemStockChart = (productId) => {
                 fill: true,
                 tension: 0.1,
                 pointRadius: 3,
-                pointHoverRadius: 6
+                pointHoverRadius: 6,
+                
+                // --- THIS IS THE FIX ---
+                pointBackgroundColor: '#ffffff', // White fill for the dots
+                pointBorderColor: '#4f46e5',     // Blue border for the dots
+                pointBorderWidth: 2,             // Make the border visible
+                pointHoverBackgroundColor: '#ffffff',
+                pointHoverBorderColor: '#312e81'
+                // --- END FIX ---
             }]
         },
         options: {

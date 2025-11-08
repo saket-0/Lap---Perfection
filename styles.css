@@ -174,7 +174,7 @@ input[type=number] {
   -moz-appearance: textfield;
 }
 
-/* *** NEW: Underlined form inputs *** */
+/* *** STYLES FOR UNDERLINED INPUTS (RESTORED) *** */
 .form-input-underline {
     -webkit-appearance: none;
     -moz-appearance: none;
@@ -187,7 +187,6 @@ input[type=number] {
     display: block;
     width: 100%;
     margin-top: 0.25rem;
-    /* *** MODIFIED: Reduced vertical padding *** */
     padding: 0.25rem 0.1rem;
     background-color: transparent;
 }
@@ -207,7 +206,6 @@ input[type=number] {
     display: block;
     width: 100%;
     margin-top: 0.25rem;
-    /* *** MODIFIED: Reduced vertical padding *** */
     padding: 0.25rem 0.1rem;
     background-color: transparent;
     background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
@@ -220,6 +218,8 @@ input[type=number] {
     outline: none;
     border-bottom-color: #4f46e5; /* indigo-600 */
 }
+/* --- End Underline Styles --- */
+
 
 /* --- Dark Mode Toggle Button --- */
 #theme-toggle-button {
@@ -345,7 +345,6 @@ input[type=number] {
 .dark .bg-slate-50 {
     background-color: #1e293b; /* slate-800 */
 }
-/* *** THIS IS THE FIX for Table Header *** */
 .dark .table-header {
     color: #d1d5db; /* slate-300 */
 }
@@ -359,38 +358,56 @@ input[type=number] {
     color: #d1d5db; /* slate-300 */
 }
 
-/* 7. Forms (Underline Inputs) */
-.dark .form-input-underline, .dark .form-select-underline {
+/* 7. Forms (FIXED: Underline inputs for Dark Mode) */
+.dark .form-input-underline, 
+.dark .form-select-underline {
     border-bottom-color: #334155; /* slate-700 */
     color: #f9fafb; /* slate-50 */
+    background-color: transparent; /* <-- This is key */
+    border-radius: 0; /* Ensure no radius */
+    border-width: 0 0 2px 0; /* Underline only */
+    padding: 0.25rem 0.1rem; /* Match light mode padding */
+    box-shadow: none; /* Remove any box shadow */
 }
-.dark .form-input-underline:focus, .dark .form-select-underline:focus {
+.dark .form-input-underline:focus, 
+.dark .form-select-underline:focus {
     border-bottom-color: #a5b4fc; /* indigo-300 */
+    box-shadow: none; /* Remove ring */
+    border-width: 0 0 2px 0; /* Maintain underline on focus */
 }
 .dark .form-select-underline {
     /* SVG icon for dark mode */
     background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    padding-right: 2.5rem; /* Restore padding for SVG */
 }
-/* Standard Tailwind forms (login page, search bar, etc) */
-.dark .border-slate-300 {
-    border-color: #334155; /* slate-700 */
-}
-.dark input[type=text],
-.dark input[type=number],
-.dark input[type=email],
-.dark input[type=password],
-.dark select {
+
+/* * *** THIS IS THE FIX ***
+ * These rules now target boxed inputs ONLY by using :not() to exclude underline inputs.
+*/
+.dark input[type=text]:not(.form-input-underline),
+.dark input[type=number]:not(.form-input-underline),
+.dark input[type=email]:not(.form-input-underline),
+.dark input[type=password]:not(.form-input-underline),
+.dark select:not(.form-select-underline) {
     background-color: #1e293b; /* slate-800 */
     color: #f8fafc; /* slate-50 */
+    border-radius: 0.375rem; /* 6px */
+    border: 1px solid #334155; /* slate-700 */
 }
+/* This selector is for the search bar, which IS boxed */
+.dark .pl-10 {
+    border-radius: 0.375rem; /* 6px */
+    border: 1px solid #334155; /* slate-700 */
+}
+
 .dark .form-input-underline::placeholder,
-.dark input[type=text]::placeholder,
-.dark input[type=number]::placeholder,
-.dark input[type=email]::placeholder {
+.dark input[type=text]:not(.form-input-underline)::placeholder,
+.dark input[type=number]:not(.form-input-underline)::placeholder,
+.dark input[type=email]:not(.form-input-underline)::placeholder {
     color: #64748b; /* slate-500 */
 }
 
-/* 8. Login Page */
+/* 8. Login Page (These remain boxed) */
 .dark #login-overlay {
     background-color: rgba(2, 6, 23, 0.9); /* slate-950 with 90% opacity */
 }
@@ -404,9 +421,13 @@ input[type=number] {
     background-color: #0f172a; /* slate-900 */
     color: #94a3b8; /* slate-400 */
 }
-.dark input[type=email], .dark input[type=password], .dark #login-email-select {
+.dark #login-overlay input[type=email], 
+.dark #login-overlay input[type=password], 
+.dark #login-overlay #login-email-select {
     background-color: #1e293b; /* slate-800 */
     color: #f9fafb; /* slate-50 */
+    border-radius: 0.375rem; /* 6px */
+    border: 1px solid #334155; /* slate-700 */
 }
 
 /* 9. Product Card (FIX) */
