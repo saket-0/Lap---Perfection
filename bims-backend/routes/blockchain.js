@@ -36,7 +36,9 @@ const ADMIN_TRANSACTION_TYPES = [
     'ADMIN_CREATE_USER',
     'ADMIN_EDIT_ROLE',
     'ADMIN_EDIT_EMAIL',
-    'ADMIN_DELETE_USER'
+    'ADMIN_DELETE_USER',
+    'USER_UPDATE_PROFILE', // <-- ADDED
+    'USER_CHANGE_PASSWORD' // <-- ADDED
 ];
 
 module.exports = (pool) => {
@@ -84,7 +86,7 @@ module.exports = (pool) => {
         const transaction = req.body;
         
         // Inject user details from the session
-        // This is the ADMIN performing the action
+        // This is the ADMIN/USER performing the action
         transaction.adminUserId = req.session.user.id;
         transaction.adminUserName = req.session.user.name;
         transaction.adminEmployeeId = req.session.user.employee_id;
@@ -97,11 +99,10 @@ module.exports = (pool) => {
 
             // *** MODIFIED VALIDATION STEP ***
             if (ADMIN_TRANSACTION_TYPES.includes(transaction.txType)) {
-                // This is an admin action.
+                // This is an admin or user profile action.
                 // It doesn't affect inventory, so we don't validate it
-                // against the inventory state. We just trust it (it's from an Admin)
-                // and log it.
-                console.log('✅ Admin action detected. Bypassing inventory validation.');
+                // against the inventory state. We just trust it and log it.
+                console.log(`✅ Admin/Profile action detected (${transaction.txType}). Bypassing inventory validation.`);
             } else {
                 // This is an inventory transaction. Validate it.
                 console.log('🔬 Validating inventory transaction...');

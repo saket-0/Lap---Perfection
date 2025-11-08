@@ -13,20 +13,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     const appContent = document.getElementById('app-content');
     const logoutButton = document.getElementById('logout-button');
     
+    // *** UPDATED navLinks ORDER ***
     const navLinks = {
         dashboard: document.getElementById('nav-dashboard'),
         products: document.getElementById('nav-products'),
         analytics: document.getElementById('nav-analytics'),
-        anomaly: document.getElementById('nav-anomaly'), // <-- ADDED
+        anomaly: document.getElementById('nav-anomaly'),
         admin: document.getElementById('nav-admin'),
         ledger: document.getElementById('nav-ledger'),
+        profile: document.getElementById('nav-profile'),
     };
     const templates = {
         dashboard: document.getElementById('dashboard-view-template'),
+        profile: document.getElementById('profile-view-template'),
         productList: document.getElementById('product-list-view-template'),
         productDetail: document.getElementById('product-detail-view-template'),
         analytics: document.getElementById('analytics-view-template'),
-        anomaly: document.getElementById('anomaly-view-template'), // <-- ADDED
+        anomaly: document.getElementById('anomaly-view-template'),
         admin: document.getElementById('admin-view-template'),
         ledger: document.getElementById('ledger-view-template'),
         snapshot: document.getElementById('snapshot-view-template'),
@@ -49,9 +52,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         navLinks.admin.style.display = permissionService.can('VIEW_ADMIN_PANEL') ? 'flex' : 'none';
         navLinks.ledger.style.display = permissionService.can('VIEW_LEDGER') ? 'flex' : 'none';
-        // Re-use VIEW_LEDGER permission for the new anomaly page
-        navLinks.anomaly.style.display = permissionService.can('VIEW_LEDGER') ? 'flex' : 'none'; // <-- ADDED
+        navLinks.anomaly.style.display = permissionService.can('VIEW_LEDGER') ? 'flex' : 'none';
         navLinks.analytics.style.display = 'flex';
+        navLinks.profile.style.display = 'flex';
 
         await loadBlockchain();
         rebuildInventoryState();
@@ -101,18 +104,23 @@ document.addEventListener('DOMContentLoaded', async () => {
                 navLinks.analytics.classList.add('active');
                 viewTemplate = templates.analytics.content.cloneNode(true);
                 appContent.appendChild(viewTemplate);
-                await renderAnalyticsPage(); // <-- MODIFIED (now async)
+                await renderAnalyticsPage();
                 break;
 
-            // VVVV NEW CASE VVVV
             case 'anomaly':
                 if (!permissionService.can('VIEW_LEDGER')) return navigateTo('dashboard');
                 navLinks.anomaly.classList.add('active');
                 viewTemplate = templates.anomaly.content.cloneNode(true);
                 appContent.appendChild(viewTemplate);
-                await renderAnomalyPage(); // Call function from anomaly-renderer.js
+                await renderAnomalyPage();
                 break;
-            // ^^^^ END OF NEW CASE ^^^^
+            
+            case 'profile':
+                navLinks.profile.classList.add('active');
+                viewTemplate = templates.profile.content.cloneNode(true);
+                appContent.appendChild(viewTemplate);
+                await renderProfilePage();
+                break;
 
             case 'snapshot':
                 navLinks.ledger.classList.add('active');
@@ -126,7 +134,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 navLinks.dashboard.classList.add('active');
                 viewTemplate = templates.dashboard.content.cloneNode(true);
                 appContent.appendChild(viewTemplate);
-                await renderDashboard(); // <-- MODIFIED (now async)
+                await renderDashboard();
                 break;
         }
     };
@@ -152,9 +160,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     logoutButton.addEventListener('click', () => authService.logout(showLogin));
     navLinks.dashboard.addEventListener('click', (e) => { e.preventDefault(); navigateTo('dashboard'); });
+    navLinks.profile.addEventListener('click', (e) => { e.preventDefault(); navigateTo('profile'); });
     navLinks.products.addEventListener('click', (e) => { e.preventDefault(); navigateTo('products'); });
     navLinks.analytics.addEventListener('click', (e) => { e.preventDefault(); navigateTo('analytics'); });
-    navLinks.anomaly.addEventListener('click', (e) => { e.preventDefault(); navigateTo('anomaly'); }); // <-- ADDED
+    navLinks.anomaly.addEventListener('click', (e) => { e.preventDefault(); navigateTo('anomaly'); });
     navLinks.admin.addEventListener('click', (e) => { e.preventDefault(); navigateTo('admin'); });
     navLinks.ledger.addEventListener('click', (e) => { e.preventDefault(); navigateTo('ledger'); });
 
@@ -179,6 +188,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (e.target.id === 'snapshot-form') {
             await handleSnapshotForm(e.target, navigateTo);
+        }
+        
+        if (e.target.id === 'update-profile-form') {
+            await handleUpdateProfile(e.target);
+        }
+        if (e.target.id === 'change-password-form') {
+            await handleChangePassword(e.target);
         }
 
         if (e.target.id === 'add-location-form') {
@@ -224,13 +240,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
-        // *** NEW: Handle clicks on clickable stats ***
         const clickableStat = e.target.closest('.clickable-stat-item');
         if (clickableStat && clickableStat.dataset.productId) {
             navigateTo('detail', { productId: clickableStat.dataset.productId });
             return;
         }
-        // *** END NEW ***
 
         if (e.target.closest('#clear-db-button')) {
             await handleClearDb(navigateTo);
@@ -240,7 +254,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             await handleVerifyChain();
         }
 
-        // --- ADD THESE ---
         const locArchive = e.target.closest('.location-archive-button');
         if (locArchive) {
             await handleArchiveLocation(locArchive.dataset.id, locArchive.dataset.name);
@@ -250,7 +263,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             await handleArchiveCategory(catArchive.dataset.id, catArchive.dataset.name);
         }
         
-        // *** NEW CLICK LISTENER ***
         const deleteButton = e.target.closest('.user-delete-button');
         if (deleteButton) {
             const userId = deleteButton.dataset.userId;
@@ -258,31 +270,24 @@ document.addEventListener('DOMContentLoaded', async () => {
             const userEmail = deleteButton.dataset.userEmail;
             await handleDeleteUser(userId, userName, userEmail);
         }
-        // *** END NEW ***
     });
 
     appContent.addEventListener('change', async (e) => {
         if (e.target.classList.contains('role-select')) {
-            // *** MODIFIED: Pass more data to handler ***
             const userId = e.target.dataset.userId;
             const userName = e.target.dataset.userName;
             const newRole = e.target.value;
             await handleRoleChange(userId, userName, newRole);
         }
 
-        // *** NEW CHANGE LISTENER ***
         if (e.target.classList.contains('user-email-input')) {
             const userId = e.target.dataset.userId;
             const userName = e.target.dataset.userName;
             const oldEmail = e.target.dataset.oldEmail;
             const newEmail = e.target.value;
-            // Pass the element itself to reset it on failure
             await handleEmailChange(userId, userName, newEmail, oldEmail, e.target);
         }
-        // *** END NEW ***
 
-        // --- ADD THESE ---
-        // We use 'change' (on blur) for performance
         if (e.target.classList.contains('location-name-input')) {
             await handleRenameLocation(e.target.dataset.id, e.target.value);
         }

@@ -42,15 +42,19 @@ const createLedgerBlockElement = (block) => {
         employeeId, beforeQuantity, afterQuantity, 
         price, category,
         // NEW admin fields
-        adminUserName, targetUser, targetEmail, targetRole, oldEmail
+        adminUserName, targetUser, targetEmail, targetRole, oldEmail,
+        // NEW user profile fields
+        oldName
     } = block.transaction;
     
     let transactionHtml = '';
     let detailsHtml = '';
 
     // Admin user is the one who performed the action
-    const adminHtml = `<li>Admin: <strong>${adminUserName || 'N/A'}</strong></li>`;
-    // Regular user is for inventory actions
+    // (This is the user from the session who *caused* the block)
+    const actorHtml = `<li>Actor: <strong>${adminUserName || 'N/A'}</strong></li>`;
+    
+    // Regular user is for inventory actions (legacy, but keep)
     const userHtml = `<li>User: <strong>${userName || 'N/A'}</strong> (${employeeId || 'N/A'})</li>`;
 
 
@@ -78,28 +82,43 @@ const createLedgerBlockElement = (block) => {
                            ${userHtml}`;
             break;
         
-        // *** NEW CASES ***
+        // *** ADMIN CASES ***
         case 'ADMIN_CREATE_USER':
             transactionHtml = `<span class="font-semibold text-purple-600">ADMIN CREATE USER</span>`;
             detailsHtml = `<li>Target: <strong>${targetUser}</strong> (${targetEmail})</li>
                            <li>Role: <strong>${targetRole}</strong></li>
-                           ${adminHtml}`;
+                           ${actorHtml}`;
             break;
         case 'ADMIN_EDIT_ROLE':
             transactionHtml = `<span class="font-semibold text-purple-600">ADMIN EDIT ROLE</span> for <strong>${targetUser}</strong>`;
             detailsHtml = `<li>Change: Role → <strong>${targetRole}</strong></li>
-                           ${adminHtml}`;
+                           ${actorHtml}`;
             break;
         case 'ADMIN_EDIT_EMAIL':
             transactionHtml = `<span class="font-semibold text-purple-600">ADMIN EDIT EMAIL</span> for <strong>${targetUser}</strong>`;
             detailsHtml = `<li>Change: Email → <strong>${targetEmail}</strong></li>
                            <li>Old Email: ${oldEmail}</li>
-                           ${adminHtml}`;
+                           ${actorHtml}`;
             break;
         case 'ADMIN_DELETE_USER':
             transactionHtml = `<span class="font-semibold text-red-700">ADMIN DELETE USER</span>`;
             detailsHtml = `<li>Target: <strong>${targetUser}</strong> (${targetEmail})</li>
-                           ${adminHtml}`;
+                           ${actorHtml}`;
+            break;
+        
+        // *** NEW USER PROFILE CASES ***
+        case 'USER_UPDATE_PROFILE':
+            transactionHtml = `<span class="font-semibold text-cyan-600">USER UPDATE PROFILE</span>`;
+            detailsHtml = `<li>User: <strong>${targetUser}</strong></li>
+                           ${oldName ? `<li>Old Name: ${oldName}</li>` : ''}
+                           ${oldEmail ? `<li>Old Email: ${oldEmail}</li>` : ''}
+                           <li>New Email: ${targetEmail}</li>
+                           ${actorHtml}`;
+            break;
+        case 'USER_CHANGE_PASSWORD':
+            transactionHtml = `<span class="font-semibold text-cyan-600">USER CHANGE PASSWORD</span>`;
+            detailsHtml = `<li>User: <strong>${targetUser}</strong></li>
+                           ${actorHtml}`;
             break;
         // *** END NEW CASES ***
 

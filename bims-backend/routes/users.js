@@ -22,6 +22,121 @@ const isAdmin = (req, res, next) => {
 
 module.exports = (pool) => {
 
+    // --- UPDATED ENDPOINT: Get data for the profile page ---
+    router.get('/me/profile-data', isAuthenticated, async (req, res) => {
+        console.log(`📈 Fetching profile data for user ${req.session.user.id}`);
+        try {
+            const userId = req.session.user.id;
+            
+            // 1. Get user's transaction history
+            // We search for the 'adminUserId' which is injected into *all* transactions by the backend
+            const historyResult = await pool.query(
+                `SELECT index, timestamp, transaction, previous_hash AS "previousHash", hash 
+                 FROM blockchain 
+                 WHERE (transaction->>'adminUserId')::integer = $1 
+                 ORDER BY index DESC`,
+                [userId]
+            );
+            
+            const history = historyResult.rows;
+
+            // 2. *** STATS CALCULATION REMOVED ***
+            
+            // Return user and their history
+            res.status(200).json({
+                user: req.session.user,
+                history: history
+            });
+
+        } catch (e) {
+            console.error('❌ Error fetching profile data:', e);
+            res.status(500).json({ message: e.message });
+        }
+    });
+
+    // --- NEW ENDPOINT: Update user's own name and email ---
+    router.put('/me/profile', isAuthenticated, async (req, res) => {
+        console.log(`👤 Updating profile for user ${req.session.user.id}`);
+        const { name, email } = req.body;
+        const { id } = req.session.user;
+
+        if (!name || !email) {
+            return res.status(400).json({ message: 'Name and email are required' });
+        }
+
+        try {
+            const result = await pool.query(
+                'UPDATE users SET name = $1, email = $2 WHERE id = $3 RETURNING id, employee_id, name, email, role',
+                [name, email, id]
+            );
+            
+            const updatedUser = result.rows[0];
+            
+            // CRITICAL: Update the session with the new user data
+            req.session.user = updatedUser;
+            req.session.save((err) => {
+                if (err) {
+                    console.error('❌ Session save error after profile update:', err);
+                    return res.status(500).json({ message: 'Failed to save session' });
+                }
+                console.log('✅ Profile updated. Session refreshed.');
+                res.status(200).json({ message: 'Profile updated', user: updatedUser });
+            });
+
+        } catch (e) {
+            if (e.code === '23505') {
+                console.log('❌ Duplicate email');
+                return res.status(409).json({ message: 'Email already exists' });
+            }
+            console.error('❌ Profile update error:', e);
+            res.status(500).json({ message: e.message });
+        }
+    });
+
+    // --- NEW ENDPOINT: Change user's own password ---
+    router.put('/me/password', isAuthenticated, async (req, res) => {
+        console.log(`🔑 Changing password for user ${req.session.user.id}`);
+        const { currentPassword, newPassword } = req.body;
+        const { id } = req.session.user;
+
+        if (!currentPassword || !newPassword) {
+            return res.status(400).json({ message: 'All password fields are required' });
+        }
+        
+        if (newPassword.length < 6) {
+             return res.status(400).json({ message: 'New password must be at least 6 characters' });
+        }
+
+        try {
+            // 1. Get current password hash
+            const result = await pool.query('SELECT password_hash FROM users WHERE id = $1', [id]);
+            const user = result.rows[0];
+
+            // 2. Compare current password
+            const isMatch = await bcrypt.compare(currentPassword, user.password_hash);
+            if (!isMatch) {
+                console.log('❌ Incorrect current password');
+                return res.status(400).json({ message: 'Incorrect current password' });
+            }
+
+            // 3. Hash and save new password
+            const salt = await bcrypt.genSalt(10);
+            const newPasswordHash = await bcrypt.hash(newPassword, salt);
+
+            await pool.query('UPDATE users SET password_hash = $1 WHERE id = $2', [newPasswordHash, id]);
+            
+            console.log('✅ Password changed successfully.');
+            res.status(200).json({ message: 'Password changed successfully' });
+
+        } catch (e) {
+            console.error('❌ Password change error:', e);
+            res.status(500).json({ message: e.message });
+        }
+    });
+
+
+    // --- EXISTING ADMIN ENDPOINTS ---
+
     // GET /api/users (For Admin Panel & Login Dropdown)
     router.get('/', async (req, res) => {
         console.log('📋 Fetching users list');
@@ -66,7 +181,6 @@ module.exports = (pool) => {
         }
     });
 
-    // *** NEW ENDPOINT ***
     // PUT /api/users/:id/email (For Admin Panel)
     router.put('/:id/email', isAuthenticated, isAdmin, async (req, res) => {
         console.log('📧 Email change request');
@@ -138,7 +252,6 @@ module.exports = (pool) => {
         }
     });
 
-    // *** NEW ENDPOINT ***
     // DELETE /api/users/:id (For Admin Panel)
     router.delete('/:id', isAuthenticated, isAdmin, async (req, res) => {
         console.log('🗑️ Delete user request');
@@ -151,9 +264,6 @@ module.exports = (pool) => {
         }
 
         try {
-            // Note: In a real system, we'd also check if this user has
-            // associated transactions and perhaps "archive" instead.
-            // For this project, a hard delete is acceptable.
             const result = await pool.query(
                 'DELETE FROM users WHERE id = $1 RETURNING name, email',
                 [id]

@@ -367,3 +367,5 @@ const renderStaleInventoryList = (staleInventory) => {
         `;
     });
 };
+
+// *** "renderProfileLocationChart" FUNCTION REMOVED ***

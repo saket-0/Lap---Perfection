@@ -449,3 +449,47 @@ const renderCategoryManagement = async () => {
         container.appendChild(item);
     });
 };
+
+
+// *** UPDATED FUNCTION: Render the Profile Page ***
+const renderProfilePage = async () => {
+    const appContent = document.getElementById('app-content');
+    if (!appContent) return;
+    
+    // Show loading state
+    appContent.querySelector('#profile-name').value = 'Loading...';
+    appContent.querySelector('#profile-email').value = 'Loading...';
+    const historyListEl = appContent.querySelector('#profile-activity-list');
+    historyListEl.innerHTML = '<p class="text-slate-500">Loading...</p>';
+    
+    try {
+        // Fetch all profile data from the new endpoint
+        const response = await fetch(`${API_BASE_URL}/api/users/me/profile-data`, {
+            credentials: 'include'
+        });
+        if (!response.ok) {
+            const err = await response.json();
+            throw new Error(err.message || 'Failed to load profile data');
+        }
+        const data = await response.json();
+        const { user, history } = data; // Destructure data
+
+        // 1. Populate forms
+        appContent.querySelector('#profile-name').value = user.name;
+        appContent.querySelector('#profile-email').value = user.email;
+        
+        // 2. Render History "Commits"
+        historyListEl.innerHTML = '';
+        if (history.length === 0) {
+            historyListEl.innerHTML = '<p class="text-slate-500">No transaction history found.</p>';
+        } else {
+            history.forEach(block => {
+                historyListEl.appendChild(createLedgerBlockElement(block));
+            });
+        }
+
+    } catch (error) {
+        showError(error.message);
+        appContent.innerHTML = `<p class="text-red-600">Error loading profile: ${error.message}</p>`;
+    }
+};
