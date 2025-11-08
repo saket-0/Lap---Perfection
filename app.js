@@ -370,13 +370,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             await handleEmailChange(userId, userName, newEmail, oldEmail, e.target);
         }
 
+        // *** MODIFIED: Pass the element itself to the handler ***
         if (e.target.classList.contains('location-name-input')) {
-            await handleRenameLocation(e.target.dataset.id, e.target.value);
+            await handleRenameLocation(e.target);
         }
         if (e.target.classList.contains('category-name-input')) {
-            await handleRenameCategory(e.target.dataset.id, e.target.value);
+            await handleRenameCategory(e.target);
         }
-
+        // *** END MODIFICATION ***
     });
 
     // --- INITIALIZATION ---

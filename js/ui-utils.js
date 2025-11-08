@@ -48,50 +48,27 @@ const createLedgerBlockElement = (block) => {
     const blockElement = document.createElement('div');
     blockElement.className = 'border border-slate-200 rounded-lg p-3 bg-white shadow-sm';
     
-    // const { 
-    //     txType, itemSku, itemName, quantity, 
-    //     fromLocation, toLocation, location, userName, 
-    //     employeeId, beforeQuantity, afterQuantity, 
-    //     price, category,
-    //     // NEW admin fields
-    //     adminUserName, targetUser, targetEmail, targetRole, oldEmail,
-    //     // NEW user profile fields
-    //     oldName
-    // } = block.transaction;
-
-    // Lap/js/ui-utils.js
-
+    // *** MODIFIED: Destructure new fields ***
     const { 
         txType, itemSku, itemName, quantity, 
         fromLocation, toLocation, location, userName, 
         employeeId, beforeQuantity, afterQuantity, 
         price, category,
-        // NEW admin fields
-        adminUserName, adminEmployeeId, // <-- ADDED adminEmployeeId
+        // Admin fields
+        adminUserName, adminEmployeeId,
         targetUser, targetEmail, targetRole, oldEmail,
-        // NEW user profile fields
-        oldName
+        // User profile fields
+        oldName,
+        // Location/Category fields
+        targetId, targetName, newName,
     } = block.transaction;
+    // *** END MODIFICATION ***
     
     let transactionHtml = '';
     let detailsHtml = '';
 
-    // Admin user is the one who performed the action
-    // (This is the user from the session who *caused* the block)
-    // const actorHtml = `<li>Actor: <strong>${adminUserName || 'N/A'}</strong></li>`;
-    // [NEW CODE]
-    // Admin user is the one who performed the action
-    // (This is the user from the session who *caused* the block)
-    // MODIFIED: Added a fallback to the legacy 'userName' field for older blocks.
-    // const actorHtml = `<li>Actor: <strong>${adminUserName || userName || 'N/A'}</strong></li>`;
     const actorHtml = `<li>User: <strong>${adminUserName || userName || 'N/A'}</strong> (${adminEmployeeId || employeeId || 'N/A'})</li>`;
     
-    
-    // Regular user is for inventory actions (legacy, but keep)
-    // --- THIS VARIABLE IS NO LONGER USED ---
-    // const userHtml = `<li>User: <strong>${userName || 'N/A'}</strong> (${employeeId || 'N/A'})</li>`;
-
-
     switch (txType) {
         case 'CREATE_ITEM':
             transactionHtml = `<span class="font-semibold text-green-700">CREATE</span> <strong>${quantity}</strong> of <strong>${itemName}</strong> (${itemSku}) to <strong>${toLocation}</strong>`;
@@ -155,12 +132,47 @@ const createLedgerBlockElement = (block) => {
                            ${actorHtml}`;
             break;
         
-        // *** NEW CASE ***
         case 'DELETE_ITEM':
             transactionHtml = `<span class="font-semibold text-red-700">DELETE ITEM</span> <strong>${itemName || ''}</strong> (${itemSku})`;
             detailsHtml = `${actorHtml}`;
             break;
-        // *** END NEW CASE ***
+
+        // *** NEWLY ADDED CASES ***
+        case 'ADMIN_ADD_LOCATION':
+            transactionHtml = `<span class="font-semibold text-purple-600">ADMIN ADD LOCATION</span>`;
+            detailsHtml = `<li>Location: <strong>${targetName}</strong> (ID: ${targetId})</li>
+                           ${actorHtml}`;
+            break;
+        case 'ADMIN_RENAME_LOCATION':
+            transactionHtml = `<span class="font-semibold text-purple-600">ADMIN RENAME LOCATION</span>`;
+            detailsHtml = `<li>Location ID: <strong>${targetId}</strong></li>
+                           <li>Old Name: ${oldName}</li>
+                           <li>New Name: <strong>${newName}</strong></li>
+                           ${actorHtml}`;
+            break;
+        case 'ADMIN_ARCHIVE_LOCATION':
+            transactionHtml = `<span class="font-semibold text-red-700">ADMIN ARCHIVE LOCATION</span>`;
+            detailsHtml = `<li>Location: <strong>${targetName}</strong> (ID: ${targetId})</li>
+                           ${actorHtml}`;
+            break;
+        case 'ADMIN_ADD_CATEGORY':
+            transactionHtml = `<span class="font-semibold text-purple-600">ADMIN ADD CATEGORY</span>`;
+            detailsHtml = `<li>Category: <strong>${targetName}</strong> (ID: ${targetId})</li>
+                           ${actorHtml}`;
+            break;
+        case 'ADMIN_RENAME_CATEGORY':
+            transactionHtml = `<span class="font-semibold text-purple-600">ADMIN RENAME CATEGORY</span>`;
+            detailsHtml = `<li>Category ID: <strong>${targetId}</strong></li>
+                           <li>Old Name: ${oldName}</li>
+                           <li>New Name: <strong>${newName}</strong></li>
+                           ${actorHtml}`;
+            break;
+        case 'ADMIN_ARCHIVE_CATEGORY':
+            transactionHtml = `<span class="font-semibold text-red-700">ADMIN ARCHIVE CATEGORY</span>`;
+            detailsHtml = `<li>Category: <strong>${targetName}</strong> (ID: ${targetId})</li>
+                           ${actorHtml}`;
+            break;
+        // *** END NEW CASES ***
 
         default:
              transactionHtml = `Unknown transaction: ${txType}`;

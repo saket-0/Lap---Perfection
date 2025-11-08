@@ -30,16 +30,23 @@ const SELECT_BLOCKCHAIN_FIELDS = `
     FROM blockchain
 `;
 
-// *** NEW ***
-// Define transaction types that bypass inventory validation
+// *** MODIFIED: Added new admin transaction types ***
 const ADMIN_TRANSACTION_TYPES = [
     'ADMIN_CREATE_USER',
     'ADMIN_EDIT_ROLE',
     'ADMIN_EDIT_EMAIL',
     'ADMIN_DELETE_USER',
-    'USER_UPDATE_PROFILE', // <-- ADDED
-    'USER_CHANGE_PASSWORD' // <-- ADDED
+    'USER_UPDATE_PROFILE',
+    'USER_CHANGE_PASSWORD',
+    // --- NEWLY ADDED ---
+    'ADMIN_ADD_LOCATION',
+    'ADMIN_RENAME_LOCATION',
+    'ADMIN_ARCHIVE_LOCATION',
+    'ADMIN_ADD_CATEGORY',
+    'ADMIN_RENAME_CATEGORY',
+    'ADMIN_ARCHIVE_CATEGORY'
 ];
+// *** END MODIFICATION ***
 
 module.exports = (pool) => {
 

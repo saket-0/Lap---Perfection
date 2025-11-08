@@ -452,12 +452,28 @@ const renderLocationManagement = async () => {
     globalLocations.forEach(loc => {
         const item = document.createElement('div');
         item.className = `flex items-center gap-2 ${loc.is_archived ? 'opacity-50' : ''}`;
+        
+        // *** MODIFIED: Added data-old-name attribute ***
         item.innerHTML = `
-            <input type="text" class="location-name-input flex-1 form-input-underline" data-id="${loc.id}" value="${loc.name}" ${loc.is_archived ? 'disabled' : ''}>
-            <button class="location-archive-button text-red-600 hover:text-red-800 disabled:text-slate-400" data-id="${loc.id}" data-name="${loc.name}" ${loc.is_archived ? 'disabled' : ''}>
+            <input 
+                type="text" 
+                class="location-name-input flex-1 form-input-underline" 
+                data-id="${loc.id}" 
+                data-old-name="${loc.name}" 
+                value="${loc.name}" 
+                ${loc.is_archived ? 'disabled' : ''}
+            >
+            <button 
+                class="location-archive-button text-red-600 hover:text-red-800 disabled:text-slate-400" 
+                data-id="${loc.id}" 
+                data-name="${loc.name}" 
+                ${loc.is_archived ? 'disabled' : ''}
+            >
                 <i class="ph-bold ph-trash"></i>
             </button>
         `;
+        // *** END MODIFICATION ***
+        
         container.appendChild(item);
     });
 };
@@ -472,12 +488,28 @@ const renderCategoryManagement = async () => {
     globalCategories.forEach(cat => {
         const item = document.createElement('div');
         item.className = `flex items-center gap-2 ${cat.is_archived ? 'opacity-50' : ''}`;
+        
+        // *** MODIFIED: Added data-old-name attribute ***
         item.innerHTML = `
-            <input type="text" class="category-name-input flex-1 form-input-underline" data-id="${cat.id}" value="${cat.name}" ${cat.is_archived ? 'disabled' : ''}>
-            <button class="category-archive-button text-red-600 hover:text-red-800 disabled:text-slate-400" data-id="${cat.id}" data-name="${cat.name}" ${cat.is_archived ? 'disabled' : ''}>
+            <input 
+                type="text" 
+                class="category-name-input flex-1 form-input-underline" 
+                data-id="${cat.id}" 
+                data-old-name="${cat.name}" 
+                value="${cat.name}" 
+                ${cat.is_archived ? 'disabled' : ''}
+            >
+            <button 
+                class="category-archive-button text-red-600 hover:text-red-800 disabled:text-slate-400" 
+                data-id="${cat.id}" 
+                data-name="${cat.name}" 
+                ${cat.is_archived ? 'disabled' : ''}
+            >
                 <i class="ph-bold ph-trash"></i>
             </button>
         `;
+        // *** END MODIFICATION ***
+        
         container.appendChild(item);
     });
 };

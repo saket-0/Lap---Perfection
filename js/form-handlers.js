@@ -468,21 +468,45 @@ const handleSnapshotForm = async (form, navigateTo) => {
 // --- LOCATION HANDLERS ---
 const handleAddLocation = async (form) => {
     const nameInput = form.querySelector('#add-location-name');
+    const name = nameInput.value;
+    if (!name) return showError("Location name is required.");
+    
     try {
         const response = await fetch(`${API_BASE_URL}/api/locations`, {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
-            credentials: 'include', body: JSON.stringify({ name: nameInput.value })
+            credentials: 'include', body: JSON.stringify({ name: name })
         });
         const data = await response.json();
         if (!response.ok) throw new Error(data.message);
+        
         showSuccess(`Location "${data.name}" added.`);
         nameInput.value = '';
+
+        // *** ADDED: Log to blockchain ***
+        await logAdminActionToBlockchain({
+            txType: "ADMIN_ADD_LOCATION",
+            targetId: data.id,
+            targetName: data.name
+        });
+        
         await fetchLocations(); 
         await renderAdminPanel();
     } catch (error) { showError(error.message); }
 };
 
-const handleRenameLocation = async (id, newName) => {
+// *** MODIFIED: To accept element and log to chain ***
+const handleRenameLocation = async (inputElement) => {
+    const id = inputElement.dataset.id;
+    const newName = inputElement.value;
+    const oldName = inputElement.dataset.oldName;
+
+    if (newName === oldName) return; // No change
+    if (!newName) {
+        showError("Location name cannot be empty.");
+        inputElement.value = oldName; // Reset
+        return;
+    }
+
     try {
         const response = await fetch(`${API_BASE_URL}/api/locations/${id}`, {
             method: 'PUT', headers: { 'Content-Type': 'application/json' },
@@ -490,9 +514,24 @@ const handleRenameLocation = async (id, newName) => {
         });
         const data = await response.json();
         if (!response.ok) throw new Error(data.message);
+        
         showSuccess(`Location renamed to "${data.name}".`);
+        inputElement.dataset.oldName = data.name; // Update the 'oldName'
+        
+        // *** ADDED: Log to blockchain ***
+        await logAdminActionToBlockchain({
+            txType: "ADMIN_RENAME_LOCATION",
+            targetId: id,
+            oldName: oldName,
+            newName: data.name
+        });
+
         await fetchLocations();
-    } catch (error) { showError(error.message); renderAdminPanel(); }
+    } catch (error) { 
+        showError(error.message); 
+        inputElement.value = oldName; // Reset on failure
+        renderAdminPanel(); 
+    }
 };
 
 const handleArchiveLocation = async (id, name) => {
@@ -502,7 +541,16 @@ const handleArchiveLocation = async (id, name) => {
             method: 'DELETE', credentials: 'include'
         });
         if (!response.ok) throw new Error((await response.json()).message);
+        
         showSuccess(`Location "${name}" archived.`);
+
+        // *** ADDED: Log to blockchain ***
+        await logAdminActionToBlockchain({
+            txType: "ADMIN_ARCHIVE_LOCATION",
+            targetId: id,
+            targetName: name
+        });
+        
         await fetchLocations();
         await renderAdminPanel();
     } catch (error) { showError(error.message); }
@@ -511,21 +559,45 @@ const handleArchiveLocation = async (id, name) => {
 // --- CATEGORY HANDLERS ---
 const handleAddCategory = async (form) => {
     const nameInput = form.querySelector('#add-category-name');
+    const name = nameInput.value;
+    if (!name) return showError("Category name is required.");
+    
     try {
         const response = await fetch(`${API_BASE_URL}/api/categories`, {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
-            credentials: 'include', body: JSON.stringify({ name: nameInput.value })
+            credentials: 'include', body: JSON.stringify({ name: name })
         });
         const data = await response.json();
         if (!response.ok) throw new Error(data.message);
+        
         showSuccess(`Category "${data.name}" added.`);
         nameInput.value = '';
+        
+        // *** ADDED: Log to blockchain ***
+        await logAdminActionToBlockchain({
+            txType: "ADMIN_ADD_CATEGORY",
+            targetId: data.id,
+            targetName: data.name
+        });
+
         await fetchCategories();
         await renderAdminPanel();
     } catch (error) { showError(error.message); }
 };
 
-const handleRenameCategory = async (id, newName) => {
+// *** MODIFIED: To accept element and log to chain ***
+const handleRenameCategory = async (inputElement) => {
+    const id = inputElement.dataset.id;
+    const newName = inputElement.value;
+    const oldName = inputElement.dataset.oldName;
+
+    if (newName === oldName) return; // No change
+    if (!newName) {
+        showError("Category name cannot be empty.");
+        inputElement.value = oldName; // Reset
+        return;
+    }
+
     try {
         const response = await fetch(`${API_BASE_URL}/api/categories/${id}`, {
             method: 'PUT', headers: { 'Content-Type': 'application/json' },
@@ -533,9 +605,24 @@ const handleRenameCategory = async (id, newName) => {
         });
         const data = await response.json();
         if (!response.ok) throw new Error(data.message);
+        
         showSuccess(`Category renamed to "${data.name}".`);
+        inputElement.dataset.oldName = data.name; // Update the 'oldName'
+
+        // *** ADDED: Log to blockchain ***
+        await logAdminActionToBlockchain({
+            txType: "ADMIN_RENAME_CATEGORY",
+            targetId: id,
+            oldName: oldName,
+            newName: data.name
+        });
+        
         await fetchCategories();
-    } catch (error) { showError(error.message); renderAdminPanel(); }
+    } catch (error) { 
+        showError(error.message); 
+        inputElement.value = oldName; // Reset on failure
+        renderAdminPanel(); 
+    }
 };
 
 const handleArchiveCategory = async (id, name) => {
@@ -545,7 +632,16 @@ const handleArchiveCategory = async (id, name) => {
             method: 'DELETE', credentials: 'include'
         });
         if (!response.ok) throw new Error((await response.json()).message);
+        
         showSuccess(`Category "${name}" archived.`);
+
+        // *** ADDED: Log to blockchain ***
+        await logAdminActionToBlockchain({
+            txType: "ADMIN_ARCHIVE_CATEGORY",
+            targetId: id,
+            targetName: name
+        });
+        
         await fetchCategories();
         await renderAdminPanel();
     } catch (error) { showError(error.message); }
