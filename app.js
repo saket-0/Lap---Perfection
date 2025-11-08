@@ -251,14 +251,37 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
-    // *** NEW EVENT LISTENER TO SELECT TEXT ON FOCUS ***
+    // *** MODIFIED: Generalized 'focus' event listener for app content ***
     appContent.addEventListener('focus', (e) => {
-        // Check if the focused element is one of the quantity inputs
-        if (e.target.id === 'update-quantity' || e.target.id === 'move-quantity') {
-            e.target.select();
+        // Check if the focused element is an INPUT tag
+        if (e.target.tagName === 'INPUT') {
+            // Exclude search bars
+            if (e.target.id === 'product-search-input') {
+                return;
+            }
+            // Exclude date/time pickers
+            if (e.target.type === 'datetime-local') {
+                return;
+            }
+            
+            // Select text for all other relevant types
+            if (e.target.type === 'text' || 
+                e.target.type === 'number' || 
+                e.target.type === 'email' || 
+                e.target.type === 'password') 
+            {
+                e.target.select();
+            }
         }
     }, true); // Use capture phase to ensure it fires reliably
-    // *** END NEW EVENT LISTENER ***
+
+    // *** NEW: 'focus' event listener for login overlay ***
+    loginOverlay.addEventListener('focus', (e) => {
+        if (e.target.tagName === 'INPUT' && (e.target.type === 'email' || e.target.type === 'password' || e.target.type === 'text')) {
+            e.target.select();
+        }
+    }, true);
+    // *** END NEW/MODIFIED SECTION ***
 
     appContent.addEventListener('click', async (e) => {
         if (e.target.closest('#back-to-list-button')) {
