@@ -36,13 +36,27 @@ const createLedgerBlockElement = (block) => {
     const blockElement = document.createElement('div');
     blockElement.className = 'border border-slate-200 rounded-lg p-3 bg-white shadow-sm';
     
+    // const { 
+    //     txType, itemSku, itemName, quantity, 
+    //     fromLocation, toLocation, location, userName, 
+    //     employeeId, beforeQuantity, afterQuantity, 
+    //     price, category,
+    //     // NEW admin fields
+    //     adminUserName, targetUser, targetEmail, targetRole, oldEmail,
+    //     // NEW user profile fields
+    //     oldName
+    // } = block.transaction;
+
+    // Lap/js/ui-utils.js
+
     const { 
         txType, itemSku, itemName, quantity, 
         fromLocation, toLocation, location, userName, 
         employeeId, beforeQuantity, afterQuantity, 
         price, category,
         // NEW admin fields
-        adminUserName, targetUser, targetEmail, targetRole, oldEmail,
+        adminUserName, adminEmployeeId, // <-- ADDED adminEmployeeId
+        targetUser, targetEmail, targetRole, oldEmail,
         // NEW user profile fields
         oldName
     } = block.transaction;
@@ -52,7 +66,14 @@ const createLedgerBlockElement = (block) => {
 
     // Admin user is the one who performed the action
     // (This is the user from the session who *caused* the block)
-    const actorHtml = `<li>Actor: <strong>${adminUserName || 'N/A'}</strong></li>`;
+    // const actorHtml = `<li>Actor: <strong>${adminUserName || 'N/A'}</strong></li>`;
+    // [NEW CODE]
+    // Admin user is the one who performed the action
+    // (This is the user from the session who *caused* the block)
+    // MODIFIED: Added a fallback to the legacy 'userName' field for older blocks.
+    // const actorHtml = `<li>Actor: <strong>${adminUserName || userName || 'N/A'}</strong></li>`;
+    const actorHtml = `<li>User: <strong>${adminUserName || userName || 'N/A'}</strong> (${adminEmployeeId || employeeId || 'N/A'})</li>`;
+    
     
     // Regular user is for inventory actions (legacy, but keep)
     // --- THIS VARIABLE IS NO LONGER USED ---
