@@ -234,17 +234,17 @@ input[type=number] {
 }
 
 .dark body {
-    background-color: #020617; /* slate-950: Make it darker */
+    background-color: #020617; /* slate-950: Softer Black */
     color: #d1d5db; /* slate-300: Default text */
 }
 
 /* 2. Main App Layout */
 .dark #app-wrapper nav {
-    background-color: #0f172a; /* slate-900: Make it darker */
+    background-color: #0f172a; /* slate-900 */
     border-right-color: #1e293b; /* slate-800 */
 }
 .dark main {
-    background-color: #020617; /* slate-950: Make it darker */
+    background-color: #020617; /* slate-950 */
 }
 
 /* 3. Sidebar (Nav) */
@@ -252,34 +252,34 @@ input[type=number] {
     border-bottom-color: #1e293b; /* slate-800 */
 }
 .dark #user-name {
-    color: #f9fafb; /* slate-50 */
+    color: #e2e8f0; /* slate-200 */
 }
 .dark #user-role, .dark #user-employee-id {
-    color: #9ca3af; /* slate-400 */
+    color: #94a3b8; /* slate-400 */
 }
 .dark .nav-link {
     color: #d1d5db; /* slate-300 */
 }
 .dark .nav-link:hover {
     background-color: #1e293b; /* slate-800 */
-    color: #f9fafb; /* slate-50 */
+    color: #e2e8f0; /* slate-200 */
 }
 .dark .nav-link.active {
     background-color: #312e81; /* indigo-900 */
-    color: #eef2ff; /* indigo-50 */
+    color: #c7d2fe; /* indigo-200 */
 }
 .dark #theme-toggle-button {
-    color: #9ca3af; /* slate-400 */
+    color: #94a3b8; /* slate-400 */
     background-color: #1e293b; /* slate-800 */
 }
 .dark #theme-toggle-button:hover {
-    color: #c7d2fe; /* indigo-200 */
+    color: #a5b4fc; /* indigo-300 */
     background-color: #334155; /* slate-700 */
 }
 
 /* 4. Cards & Content (bg-white) */
 .dark .bg-white {
-    background-color: #0f172a; /* slate-900: Make it darker */
+    background-color: #0f172a; /* slate-900 */
     border-color: #1e293b; /* slate-800 */
 }
 .dark .shadow-md {
@@ -289,12 +289,14 @@ input[type=number] {
     box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 }
 
-/* 5. Headings & Text (FIX for foreground) */
+/* 5. Headings & Text (FIX: Softer, less contrast) */
 .dark .text-slate-900,
-.dark .text-slate-800,
+.dark .text-slate-800 {
+    color: #e2e8f0; /* slate-200 (Softer than pure white) */
+}
 .dark .text-slate-700,
 .dark .text-slate-600 {
-    color: #f8fafc; /* slate-50 - Fix for all dark text */
+    color: #d1d5db; /* slate-300 (Default text) */
 }
 .dark .text-slate-500 {
     color: #94a3b8; /* slate-400 */
@@ -302,40 +304,40 @@ input[type=number] {
 .dark .text-slate-400 {
     color: #64748b; /* slate-500 */
 }
-/* Fix for specific colored text */
+/* Fix for specific colored text (Muted) */
 .dark .text-indigo-800 {
-    color: #c7d2fe; /* indigo-200 */
+    color: #a5b4fc; /* indigo-300 */
 }
 .dark .text-indigo-700 {
     color: #a5b4fc; /* indigo-300 */
 }
 .dark .text-indigo-600 {
-    color: #c7d2fe; /* indigo-200 */
+    color: #a5b4fc; /* indigo-300 */
 }
 .dark .bg-indigo-100 {
     background-color: #3730a3; /* indigo-800 */
-    color: #e0e7ff; /* indigo-200 - Fix for date badge */
+    color: #c7d2fe; /* indigo-200 - Fix for date badge */
 }
 .dark .text-green-700 {
-    color: #4ade80; /* green-400 */
+    color: #22c55e; /* green-500 */
 }
 .dark .text-green-600 {
-    color: #86efac; /* green-300 */
+    color: #4ade80; /* green-400 */
 }
 .dark .text-blue-600 {
-    color: #93c5fd; /* blue-300 */
+    color: #60a5fa; /* blue-400 */
 }
 .dark .text-red-600 {
     color: #f87171; /* red-400 */
 }
 .dark .text-red-700 {
-    color: #fca5a5; /* red-300 */
+    color: #ef4444; /* red-500 */
 }
 .dark .text-purple-600 {
-    color: #d8b4fe; /* purple-300 */
+    color: #c084fc; /* purple-400 */
 }
 .dark .text-cyan-600 {
-    color: #67e8f9; /* cyan-300 */
+    color: #22d3ee; /* cyan-400 */
 }
 
 /* 6. Ledger Blocks & Borders */
@@ -346,10 +348,10 @@ input[type=number] {
     background-color: #1e293b; /* slate-800 */
 }
 .dark .table-header {
-    color: #d1d5db; /* slate-300 */
+    color: #94a3b8; /* slate-400 */
 }
 .dark .table-cell {
-    color: #f8fafc; /* slate-50 */
+    color: #e2e8f0; /* slate-200 */
 }
 .dark .truncate p {
     color: #94a3b8; /* slate-400 */
@@ -361,8 +363,8 @@ input[type=number] {
 /* 7. Forms (FIXED: Underline inputs for Dark Mode) */
 .dark .form-input-underline, 
 .dark .form-select-underline {
-    border-bottom-color: #334155; /* slate-700 */
-    color: #f9fafb; /* slate-50 */
+    border-bottom-color: #1e293b; /* slate-800 */
+    color: #e2e8f0; /* slate-200 */
     background-color: transparent; /* <-- This is key */
     border-radius: 0; /* Ensure no radius */
     border-width: 0 0 2px 0; /* Underline only */
@@ -371,7 +373,7 @@ input[type=number] {
 }
 .dark .form-input-underline:focus, 
 .dark .form-select-underline:focus {
-    border-bottom-color: #a5b4fc; /* indigo-300 */
+    border-bottom-color: #818cf8; /* indigo-400 */
     box-shadow: none; /* Remove ring */
     border-width: 0 0 2px 0; /* Maintain underline on focus */
 }
@@ -382,7 +384,6 @@ input[type=number] {
 }
 
 /*
- * *** THIS IS THE FIX ***
  * These rules now target boxed inputs ONLY by using :not() to exclude underline inputs.
 */
 .dark input[type=text]:not(.form-input-underline),
@@ -391,7 +392,7 @@ input[type=number] {
 .dark input[type=password]:not(.form-input-underline),
 .dark select:not(.form-select-underline) {
     background-color: #1e293b; /* slate-800 */
-    color: #f8fafc; /* slate-50 */
+    color: #e2e8f0; /* slate-200 */
     border-radius: 0.375rem; /* 6px */
     border: 1px solid #334155; /* slate-700 */
 }
@@ -426,7 +427,7 @@ input[type=number] {
 .dark #login-overlay input[type=password], 
 .dark #login-overlay #login-email-select {
     background-color: #1e293b; /* slate-800 */
-    color: #f9fafb; /* slate-50 */
+    color: #e2e8f0; /* slate-200 */
     border-radius: 0.375rem; /* 6px */
     border: 1px solid #334155; /* slate-700 */
 }
@@ -440,7 +441,7 @@ input[type=number] {
     background-color: #1e293b; /* slate-800 */
 }
 .dark .product-card-placeholder i {
-    color: #334155; /* slate-7E00 */
+    color: #334155; /* slate-700 */
 }
 .dark .product-card:hover {
     border-color: #4338ca; /* indigo-700 */

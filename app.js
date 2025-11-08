@@ -251,6 +251,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
+    // *** NEW EVENT LISTENER TO SELECT TEXT ON FOCUS ***
+    appContent.addEventListener('focus', (e) => {
+        // Check if the focused element is one of the quantity inputs
+        if (e.target.id === 'update-quantity' || e.target.id === 'move-quantity') {
+            e.target.select();
+        }
+    }, true); // Use capture phase to ensure it fires reliably
+    // *** END NEW EVENT LISTENER ***
+
     appContent.addEventListener('click', async (e) => {
         if (e.target.closest('#back-to-list-button')) {
             navigateTo('products');
@@ -293,6 +302,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (e.target.closest('#verify-chain-button')) {
             await handleVerifyChain();
         }
+
+        // *** MODIFIED CLICK HANDLER ***
+        if (e.target.closest('#delete-product-button')) {
+            const productId = document.getElementById('detail-product-id').textContent;
+            const productName = document.getElementById('detail-product-name').textContent;
+            // *** PASS navigateTo AS AN ARGUMENT ***
+            await handleDeleteProduct(productId, productName, navigateTo);
+            return;
+        }
+        // *** END MODIFICATION ***
 
         const locArchive = e.target.closest('.location-archive-button');
         if (locArchive) {

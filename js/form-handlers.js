@@ -202,6 +202,38 @@ const handleVerifyChain = async () => {
     }
 };
 
+// *** MODIFIED FUNCTION SIGNATURE ***
+const handleDeleteProduct = async (productId, productName, navigateTo) => {
+    if (!permissionService.can('DELETE_ITEM')) return showError("Access Denied.");
+
+    if (!confirm(`Are you sure you want to delete "${productName}" (${productId})?\n\nThis action can only be done if stock is 0 and will be permanently recorded.`)) {
+        return;
+    }
+
+    const transaction = {
+        txType: "DELETE_ITEM",
+        itemSku: productId,
+        itemName: productName // Include name for ledger readability
+    };
+
+    // Run client-side pre-check
+    if (processTransaction(transaction, false, showError)) {
+        try {
+            // If pre-check passes, send to server
+            await addTransactionToChain(transaction);
+            showSuccess(`Product ${productName} deleted!`);
+            
+            // *** USE THE PASSED-IN FUNCTION ***
+            navigateTo('products'); // Navigate back to the list
+
+        } catch (error) {
+            showError(`Server error: ${error.message}`);
+            rebuildInventoryState(); // Roll back the local state change
+            renderProductDetail(productId); // Re-render the detail page
+        }
+    }
+};
+
 // *** Helper function to log admin actions (to avoid repetition) ***
 const logAdminActionToBlockchain = async (transaction) => {
     try {

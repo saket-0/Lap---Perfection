@@ -124,8 +124,30 @@ function validateTransaction(transaction, currentChain) {
     const errorCallback = (message) => { throw new Error(message); };
     
     try {
+        // *** ADD THIS SPECIFIC VALIDATION LOGIC ***
+        const { txType, itemSku } = transaction;
+        if (txType === 'DELETE_ITEM') {
+            if (!inventory.has(itemSku)) {
+                throw new Error(`Product ${itemSku} not found.`);
+            }
+            const product = inventory.get(itemSku);
+            if (product.is_deleted) {
+                throw new Error(`Product ${itemSku} is already deleted.`);
+            }
+            let totalStock = 0;
+            product.locations.forEach(qty => totalStock += qty);
+            if (totalStock > 0) {
+                throw new Error(`Cannot delete product with remaining stock (${totalStock} units). Please stock out all units first.`);
+            }
+        }
+        // *** END ADDED SECTION ***
+
         const success = processTransaction(transaction, inventory, false, errorCallback);
-        return { success: success, error: null };
+        if (!success) {
+            // This shouldn't be hit if validation above is correct, but good failsafe
+             throw new Error('Transaction failed final processing.');
+        }
+        return { success: true, error: null };
     } catch (error) {
         return { success: false, error: error.message };
     }
@@ -229,6 +251,13 @@ const processTransaction = (transaction, inventory, suppressErrors = false, show
                 return false;
             }
             product.locations.set(location, currentStockOutQty - quantity);
+            return true;
+        
+        // *** NEW CASE ***
+        case 'DELETE_ITEM':
+            if (product) { // product is already retrieved
+                product.is_deleted = true;
+            }
             return true;
     }
     return false;

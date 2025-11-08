@@ -154,6 +154,10 @@ const permissionService = {
                 return role === 'Admin';
             
             // *** NEW PERMISSION ***
+            case 'DELETE_ITEM':
+                return role === 'Admin';
+
+            // *** NEW PERMISSION ***
             case 'VIEW_HISTORICAL_STATE':
                 return role === 'Admin' || role === 'Auditor';
 
@@ -258,6 +262,21 @@ const processTransaction = (transaction, suppressErrors = false, showErrorCallba
                 return false;
             }
             product.locations.set(location, currentStockOutQty - quantity);
+            return true;
+        
+        // *** NEW CASE ***
+        case 'DELETE_ITEM':
+            if (product.is_deleted) {
+                if (showErrorCallback) showErrorCallback(`Product ${itemSku} is already deleted.`, suppressErrors);
+                return false;
+            }
+            let totalStock = 0;
+            product.locations.forEach(qty => totalStock += qty);
+            if (totalStock > 0) {
+                if (showErrorCallback) showErrorCallback(`Cannot delete product with remaining stock (${totalStock} units). Please stock out all units first.`, suppressErrors);
+                return false;
+            }
+            product.is_deleted = true; // Apply the state change
             return true;
     }
     return false;

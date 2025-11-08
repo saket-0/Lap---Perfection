@@ -8,7 +8,13 @@ const showError = (message, suppress = false) => {
     
     const errorMessage = document.getElementById('error-message');
     const errorToast = document.getElementById('error-toast');
-    if (!errorMessage || !errorToast) return;
+    const successToast = document.getElementById('success-toast'); // Get success toast
+    if (!errorMessage || !errorToast || !successToast) return;
+
+    // *** FIX: Clear and hide success toast ***
+    successToast.classList.remove('toast-show');
+    clearTimeout(successTimer);
+    // *** END FIX ***
 
     errorMessage.textContent = message;
     errorToast.classList.add('toast-show');
@@ -22,7 +28,13 @@ const showSuccess = (message) => {
     
     const successMessage = document.getElementById('success-message');
     const successToast = document.getElementById('success-toast');
-    if (!successMessage || !successToast) return;
+    const errorToast = document.getElementById('error-toast'); // Get error toast
+    if (!successMessage || !successToast || !errorToast) return;
+
+    // *** FIX: Clear and hide error toast ***
+    errorToast.classList.remove('toast-show');
+    clearTimeout(errorTimer);
+    // *** END FIX ***
 
     successMessage.textContent = message;
     successToast.classList.add('toast-show');
@@ -142,7 +154,13 @@ const createLedgerBlockElement = (block) => {
             detailsHtml = `<li>User: <strong>${targetUser}</strong></li>
                            ${actorHtml}`;
             break;
-        // *** END NEW CASES ***
+        
+        // *** NEW CASE ***
+        case 'DELETE_ITEM':
+            transactionHtml = `<span class="font-semibold text-red-700">DELETE ITEM</span> <strong>${itemName || ''}</strong> (${itemSku})`;
+            detailsHtml = `${actorHtml}`;
+            break;
+        // *** END NEW CASE ***
 
         default:
              transactionHtml = `Unknown transaction: ${txType}`;

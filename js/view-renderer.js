@@ -9,6 +9,9 @@ const renderDashboard = async () => {
     let totalUnits = 0;
     let totalValue = 0;
     inventory.forEach(product => {
+        // *** ADDED CHECK ***
+        if (product.is_deleted) return;
+        
         let totalStock = 0;
         product.locations.forEach(qty => totalStock += qty);
         totalUnits += totalStock;
@@ -138,6 +141,11 @@ const renderProductList = () => {
     // Iterate over the reversed array
     productsArray.forEach(([productId, product]) => {
     // --- END MODIFICATION ---
+    
+        // *** NEW LINE: HIDE DELETED PRODUCTS ***
+        if (product.is_deleted) return;
+        // *** END NEW LINE ***
+
         const productName = product.productName.toLowerCase();
         const sku = productId.toLowerCase();
 
@@ -233,7 +241,27 @@ const renderProductDetail = (productId) => {
 
     appContent.querySelector('#detail-total-stock').textContent = `${totalStock} units`;
     
-    appContent.querySelector('#update-stock-container').style.display = permissionService.can('UPDATE_STOCK') ? 'block' : 'none';
+    // *** MODIFIED/NEW SECTION ***
+    const dangerZone = appContent.querySelector('#danger-zone-container');
+    const updateStock = appContent.querySelector('#update-stock-container');
+    const archivedMsg = appContent.querySelector('#product-archived-message');
+    const deleteForm = appContent.querySelector('#delete-product-form');
+
+    if (dangerZone) {
+        dangerZone.style.display = permissionService.can('DELETE_ITEM') ? 'block' : 'none';
+    }
+
+    if (product.is_deleted) {
+        if (updateStock) updateStock.style.display = 'none'; // Hide update forms
+        if (dangerZone) dangerZone.style.display = 'block'; // Ensure danger zone is visible
+        if (archivedMsg) archivedMsg.style.display = 'block'; // Show "Archived" message
+        if (deleteForm) deleteForm.style.display = 'none'; // Hide the delete button
+    } else {
+        if (updateStock) updateStock.style.display = permissionService.can('UPDATE_STOCK') ? 'block' : 'none';
+        if (archivedMsg) archivedMsg.style.display = 'none';
+        if (deleteForm) deleteForm.style.display = 'block';
+    }
+    // *** END SECTION ***
 
     renderItemHistory(productId);
     
@@ -384,6 +412,10 @@ const renderSnapshotView = (snapshotData) => {
     }
 
     inventoryMap.forEach((product, productId) => {
+        // *** NEW LINE: HIDE DELETED PRODUCTS ***
+        if (product.is_deleted) return;
+        // *** END NEW LINE ***
+
         const productCard = document.createElement('div');
         productCard.className = 'product-card opacity-80'; 
 
