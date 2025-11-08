@@ -381,7 +381,8 @@ input[type=number] {
     padding-right: 2.5rem; /* Restore padding for SVG */
 }
 
-/* * *** THIS IS THE FIX ***
+/*
+ * *** THIS IS THE FIX ***
  * These rules now target boxed inputs ONLY by using :not() to exclude underline inputs.
 */
 .dark input[type=text]:not(.form-input-underline),
@@ -439,7 +440,7 @@ input[type=number] {
     background-color: #1e293b; /* slate-800 */
 }
 .dark .product-card-placeholder i {
-    color: #334155; /* slate-700 */
+    color: #334155; /* slate-7E00 */
 }
 .dark .product-card:hover {
     border-color: #4338ca; /* indigo-700 */
@@ -462,5 +463,10 @@ input[type=number] {
 
 /* 11. Clickable Stat Item */
 .dark .clickable-stat-item:hover {
+    background-color: #1e293b; /* slate-800 */
+}
+
+/* *** THIS IS THE FIX for Low Stock Hover *** */
+.dark .low-stock-item:hover {
     background-color: #1e293b; /* slate-800 */
 }

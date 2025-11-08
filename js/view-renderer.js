@@ -309,7 +309,7 @@ const renderAdminPanel = async () => {
             const row = document.createElement('tr');
             const isCurrentUser = user.id === currentUser.id;
             
-            // *** MODIFIED INNERHTML ***
+            // *** THIS IS THE FIX ***
             row.innerHTML = `
                 <td class="table-cell font-medium">${user.name}</td>
                 <td class="table-cell text-slate-500">${user.employee_id}</td>
@@ -326,7 +326,7 @@ const renderAdminPanel = async () => {
                 </td>
                 <td class="table-cell">
                     <select 
-                        class="role-select block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" 
+                        class="role-select form-select-underline" 
                         data-user-id="${user.id}" 
                         data-user-name="${user.name}"
                         ${isCurrentUser ? 'disabled' : ''}
@@ -348,7 +348,7 @@ const renderAdminPanel = async () => {
                     </button>
                 </td>
             `;
-            // *** END MODIFICATION ***
+            // *** END FIX ***
             tableBody.appendChild(row);
         });
 
