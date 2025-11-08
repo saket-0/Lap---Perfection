@@ -66,13 +66,34 @@ const renderItemStockChart = (productId) => {
 };
 
 
-const renderAnalyticsPage = () => {
-    // This is no longer async
-    // The call to renderAnomalyList() has been removed
-    renderTxVelocityChart();
-    renderInventoryDistributionChart();
-    renderTxHeatmapChart();
-    renderInventoryCategoryChart();
+// *** MODIFIED: This function now calls the restored charts ***
+const renderAnalyticsPage = async () => {
+    try {
+        // Render the charts that use local data
+        renderTxVelocityChart();
+        renderTxHeatmapChart();
+        renderInventoryDistributionChart(); // <-- ADDED BACK
+        renderInventoryCategoryChart(); // <-- ADDED BACK
+
+        // Fetch the new consolidated KPIs
+        const response = await fetch(`${API_BASE_URL}/api/analytics/kpis`, {
+            credentials: 'include'
+        });
+        if (!response.ok) {
+            throw new Error('Failed to load analytics KPIs');
+        }
+        const kpis = await response.json();
+
+        // Render the new charts/lists
+        renderTransactionMixChart(kpis.txMix);
+        renderTopMoversList(kpis.topMovers);
+        renderHighValueList(kpis.highValueItems);
+        renderStaleInventoryList(kpis.staleInventory);
+
+    } catch (error) {
+        console.error("Failed to render analytics page:", error);
+        showError(error.message);
+    }
 };
 
 
@@ -138,12 +159,16 @@ const renderTxVelocityChart = () => {
     currentCharts.push(velocityChart);
 };
 
+// *** ADDED BACK: Renders Inventory Value by Location ***
 const renderInventoryDistributionChart = () => {
-    const locationValues = new Map([
-        ['Supplier', 0],
-        ['Warehouse', 0],
-        ['Retailer', 0]
-    ]);
+    const locationValues = new Map();
+    
+    // Use globalLocations to get the source of truth for locations
+    globalLocations.forEach(loc => {
+        if (!loc.is_archived) {
+            locationValues.set(loc.name, 0);
+        }
+    });
 
     inventory.forEach(product => {
         const price = product.price || 0;
@@ -164,7 +189,7 @@ const renderInventoryDistributionChart = () => {
             datasets: [{
                 label: 'Inventory Value',
                 data: Array.from(locationValues.values()),
-                backgroundColor: ['#3b82f6', '#f97316', '#10b981']
+                backgroundColor: ['#3b82f6', '#f97316', '#10b981', '#ef4444', '#6b7280']
             }]
         },
         options: {
@@ -208,8 +233,16 @@ const renderTxHeatmapChart = () => {
     currentCharts.push(heatmapChart);
 };
 
+// *** ADDED BACK: Renders Inventory Value by Category ***
 const renderInventoryCategoryChart = () => {
     const categoryValues = new Map();
+
+    // Use globalCategories to get the source of truth
+    globalCategories.forEach(cat => {
+        if (!cat.is_archived) {
+            categoryValues.set(cat.name, 0);
+        }
+    });
 
     inventory.forEach(product => {
         const price = product.price || 0;
@@ -218,7 +251,10 @@ const renderInventoryCategoryChart = () => {
         product.locations.forEach(qty => totalStock += qty);
         
         const currentCategoryValue = categoryValues.get(category) || 0;
-        categoryValues.set(category, currentCategoryValue + (totalStock * price));
+        // Only add if the category is known and not archived
+        if (categoryValues.has(category)) {
+             categoryValues.set(category, currentCategoryValue + (totalStock * price));
+        }
     });
 
     const ctx = document.getElementById('inventory-category-chart')?.getContext('2d');
@@ -231,7 +267,7 @@ const renderInventoryCategoryChart = () => {
             datasets: [{
                 label: 'Inventory Value',
                 data: Array.from(categoryValues.values()),
-                backgroundColor: ['#4f46e5', '#3b82f6', '#10b981', '#f97316', '#ef4444', '#6b7280']
+                backgroundColor: ['#4f46e5', '#3b82f6', '#10b981', '#f97316', '#ef4444', '#6b7280', '#fbbf24']
             }]
         },
         options: {
@@ -240,4 +276,91 @@ const renderInventoryCategoryChart = () => {
         }
     });
     currentCharts.push(categoryChart);
+};
+
+// --- New KPI Functions from last step ---
+
+const renderTransactionMixChart = (txMixData) => {
+    const ctx = document.getElementById('tx-mix-chart')?.getContext('2d');
+    if (!ctx) return;
+
+    const labels = txMixData.map(d => d[0]);
+    const data = txMixData.map(d => d[1]);
+
+    const pieChart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Transaction Mix',
+                data: data,
+                backgroundColor: ['#4f46e5', '#3b82f6', '#10b981', '#f97316', '#ef4444']
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { position: 'top' } }
+        }
+    });
+    currentCharts.push(pieChart);
+};
+
+const renderTopMoversList = (topMovers) => {
+    const container = document.getElementById('analytics-top-movers');
+    if (!container) return;
+    container.innerHTML = '';
+    
+    if (topMovers.length === 0) {
+        container.innerHTML = '<p class="text-slate-500">No stock-out transactions in 30 days.</p>';
+        return;
+    }
+    
+    topMovers.forEach(item => {
+        container.innerHTML += `
+            <div class="flex justify-between items-center">
+                <span class="truncate" title="${item.name} (${item.sku})">${item.name}</span>
+                <span class="font-semibold text-indigo-600">${item.quantity} units</span>
+            </div>
+        `;
+    });
+};
+
+const renderHighValueList = (highValueItems) => {
+    const container = document.getElementById('analytics-high-value');
+    if (!container) return;
+    container.innerHTML = '';
+    
+    if (highValueItems.length === 0) {
+        container.innerHTML = '<p class="text-slate-500">No items in stock.</p>';
+        return;
+    }
+    
+    highValueItems.forEach(item => {
+        container.innerHTML += `
+            <div class="flex justify-between items-center">
+                <span class="truncate" title="${item.name} (${item.sku})">${item.name}</span>
+                <span class="font-semibold text-indigo-600">₹${item.value.toFixed(2)}</span>
+            </div>
+        `;
+    });
+};
+
+const renderStaleInventoryList = (staleInventory) => {
+    const container = document.getElementById('analytics-stale-inventory');
+    if (!container) return;
+    container.innerHTML = '';
+    
+    if (staleInventory.length === 0) {
+        container.innerHTML = '<p class="text-slate-500">All items are moving!</p>';
+        return;
+    }
+    
+    staleInventory.forEach(item => {
+        container.innerHTML += `
+            <div class="flex justify-between items-center">
+                <span class="truncate" title="${item.name} (${item.sku})">${item.name}</span>
+                <span class="font-semibold text-red-600">${item.stock} units</span>
+            </div>
+        `;
+    });
 };

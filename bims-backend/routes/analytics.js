@@ -35,6 +35,121 @@ const getStdDev = (array) => {
 module.exports = (pool) => {
 
     /**
+     * *** NEW ENDPOINT: Consolidated KPIs ***
+     * GET /api/analytics/kpis
+     * Calculates several new insightful KPIs for the main analytics page.
+     */
+    router.get('/kpis', isAuthenticated, async (req, res) => {
+        console.log('📈 Generating new analytics KPIs...');
+        try {
+            const chainResult = await pool.query(`${SELECT_BLOCKCHAIN_FIELDS} ORDER BY index ASC`);
+            const currentChain = chainResult.rows;
+
+            if (currentChain.length <= 1) {
+                return res.status(200).json({
+                    txMix: [],
+                    topMovers: [],
+                    highValueItems: [],
+                    staleInventory: []
+                });
+            }
+
+            const { inventory } = rebuildStateAt(currentChain, new Date().toISOString());
+            
+            const now = new Date();
+            const thirtyDaysAgo = new Date(new Date().setDate(now.getDate() - 30));
+            const ninetyDaysAgo = new Date(new Date().setDate(now.getDate() - 90));
+
+            // --- 1. Transaction Mix ---
+            const txMix = new Map();
+            // --- 2. Top Movers (30d) ---
+            const topMoversMap = new Map();
+            // --- 3. Stale Inventory (90d) ---
+            const recentMovement = new Set();
+            
+            currentChain.forEach(block => {
+                if (block.index === 0) return;
+                const tx = block.transaction;
+                const blockDate = new Date(block.timestamp);
+
+                // 1. Tx Mix
+                txMix.set(tx.txType, (txMix.get(tx.txType) || 0) + 1);
+
+                // 2. Top Movers
+                if (tx.txType === 'STOCK_OUT' && blockDate > thirtyDaysAgo) {
+                    topMoversMap.set(tx.itemSku, (topMoversMap.get(tx.itemSku) || 0) + tx.quantity);
+                }
+
+                // 3. Stale Inventory
+                if ((tx.txType === 'STOCK_OUT' || tx.txType === 'MOVE') && blockDate > ninetyDaysAgo) {
+                    recentMovement.add(tx.itemSku);
+                }
+            });
+
+            // --- Process KPIs ---
+
+            // 2. Process Top Movers
+            const topMovers = Array.from(topMoversMap.entries())
+                .sort((a, b) => b[1] - a[1]) // Sort descending by quantity
+                .slice(0, 5) // Get top 5
+                .map(([sku, quantity]) => ({
+                    sku,
+                    name: inventory.get(sku)?.productName || 'N/A',
+                    quantity
+                }));
+            
+            // 3. Process Stale Inventory
+            const staleInventory = [];
+            inventory.forEach((product, sku) => {
+                if (!recentMovement.has(sku)) {
+                    let totalStock = 0;
+                    product.locations.forEach(qty => totalStock += qty);
+                    if (totalStock > 0) { // Only list if it's in stock
+                        staleInventory.push({
+                            sku,
+                            name: product.productName,
+                            stock: totalStock
+                        });
+                    }
+                }
+            });
+
+            // --- 4. High-Value Items ---
+            const highValueItems = [];
+            inventory.forEach((product, sku) => {
+                let totalStock = 0;
+                product.locations.forEach(qty => totalStock += qty);
+                if (totalStock > 0) {
+                    highValueItems.push({
+                        sku,
+                        name: product.productName,
+                        stock: totalStock,
+                        value: totalStock * (product.price || 0)
+                    });
+                }
+            });
+            
+            const sortedHighValue = highValueItems
+                .sort((a, b) => b.value - a.value) // Sort descending by value
+                .slice(0, 5); // Get top 5
+
+            
+            console.log('✅ New KPIs generated.');
+            res.status(200).json({
+                txMix: Array.from(txMix.entries()),
+                topMovers: topMovers,
+                highValueItems: sortedHighValue,
+                staleInventory: staleInventory.slice(0, 5) // Limit to 5 for UI
+            });
+
+        } catch (e) {
+            console.error('❌ Error in KPI generation:', e);
+            res.status(500).json({ message: e.message });
+        }
+    });
+
+
+    /**
      * FEATURE 1: Predictive Low-Stock
      * GET /api/analytics/low-stock-predictions
      */

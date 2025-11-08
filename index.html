@@ -276,11 +276,6 @@
                         </div>
                     </div>
 
-                    <div class="bg-white p-6 rounded-lg shadow-md">
-                        <h2 class="text-2xl font-semibold mb-4 text-slate-800">Verifiable Stock History</h2>
-                        <canvas id="item-stock-chart"></canvas>
-                    </div>
-
                     <div id="update-stock-container" class="bg-white p-6 rounded-lg shadow-md space-y-8">
                         <div>
                             <h2 class="text-2xl font-semibold mb-4 text-slate-800">Update Stock (Add/Remove)</h2>
@@ -354,6 +349,12 @@
                             </form>
                         </div>
                     </div>
+                    
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h2 class="text-2xl font-semibold mb-4 text-slate-800">Verifiable Stock History</h2>
+                        <canvas id="item-stock-chart"></canvas>
+                    </div>
+
                 </div>
 
                 <div class="lg:col-span-1">
@@ -550,7 +551,38 @@
                      </div>
                 </div>
 
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h2 class="text-2xl font-semibold mb-4 text-slate-800">Transaction Mix</h2>
+                    <div class="max-w-xs mx-auto">
+                        <canvas id="tx-mix-chart"></canvas>
+                    </div>
                 </div>
+
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                     <h2 class="text-2xl font-semibold mb-4 text-slate-800">Key Inventory Stats</h2>
+                     <div class="space-y-6">
+                        <div>
+                            <h3 class="font-semibold text-slate-800 mb-2">Top Movers (30d Stock Out)</h3>
+                            <div id="analytics-top-movers" class="space-y-2 text-sm">
+                                <p class="text-slate-500">Loading...</p>
+                            </div>
+                        </div>
+                        <div class_ ="border-t border-slate-200 pt-4">
+                            <h3 class="font-semibold text-slate-800 mb-2">Top 5 High-Value Items</h3>
+                            <div id="analytics-high-value" class="space-y-2 text-sm">
+                                <p class="text-slate-500">Loading...</p>
+                            </div>
+                        </div>
+                        <div class="border-t border-slate-200 pt-4">
+                            <h3 class="font-semibold text-slate-800 mb-2">Stale Inventory (No movement > 90d)</h3>
+                            <div id="analytics-stale-inventory" class="space-y-2 text-sm">
+                                <p class="text-slate-500">Loading...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
         </div>
     </template>
 
