@@ -249,12 +249,37 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (catArchive) {
             await handleArchiveCategory(catArchive.dataset.id, catArchive.dataset.name);
         }
+        
+        // *** NEW CLICK LISTENER ***
+        const deleteButton = e.target.closest('.user-delete-button');
+        if (deleteButton) {
+            const userId = deleteButton.dataset.userId;
+            const userName = deleteButton.dataset.userName;
+            const userEmail = deleteButton.dataset.userEmail;
+            await handleDeleteUser(userId, userName, userEmail);
+        }
+        // *** END NEW ***
     });
 
     appContent.addEventListener('change', async (e) => {
         if (e.target.classList.contains('role-select')) {
-            await handleRoleChange(e.target.dataset.userId, e.target.value);
+            // *** MODIFIED: Pass more data to handler ***
+            const userId = e.target.dataset.userId;
+            const userName = e.target.dataset.userName;
+            const newRole = e.target.value;
+            await handleRoleChange(userId, userName, newRole);
         }
+
+        // *** NEW CHANGE LISTENER ***
+        if (e.target.classList.contains('user-email-input')) {
+            const userId = e.target.dataset.userId;
+            const userName = e.target.dataset.userName;
+            const oldEmail = e.target.dataset.oldEmail;
+            const newEmail = e.target.value;
+            // Pass the element itself to reset it on failure
+            await handleEmailChange(userId, userName, newEmail, oldEmail, e.target);
+        }
+        // *** END NEW ***
 
         // --- ADD THESE ---
         // We use 'change' (on blur) for performance

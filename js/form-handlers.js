@@ -25,6 +25,11 @@ const handleAddItem = async (form) => {
         afterQuantity: quantity, 
         toLocation
     };
+    
+    // We add the user from the frontend, but the backend will
+    // overwrite this with the verified session user.
+    transaction.userName = currentUser.name;
+    transaction.employeeId = currentUser.employee_id;
 
     if (processTransaction(transaction, false, showError)) {
         try {
@@ -77,7 +82,9 @@ const handleUpdateStock = async (form) => {
         transaction = { 
             txType: "STOCK_IN", itemSku, quantity, 
             location: locationIn, 
-            beforeQuantity, afterQuantity
+            beforeQuantity, afterQuantity,
+            userName: currentUser.name, 
+            employeeId: currentUser.employee_id
         };
         success = processTransaction(transaction, false, showError);
 
@@ -89,7 +96,9 @@ const handleUpdateStock = async (form) => {
         transaction = { 
             txType: "STOCK_OUT", itemSku, quantity, 
             location: locationOut, 
-            beforeQuantity, afterQuantity
+            beforeQuantity, afterQuantity,
+            userName: currentUser.name,
+            employeeId: currentUser.employee_id
         };
         success = processTransaction(transaction, false, showError);
     }
@@ -132,7 +141,9 @@ const handleMoveStock = async (form) => {
         txType: "MOVE", itemSku, quantity,
         fromLocation, toLocation,
         beforeQuantity: { from: beforeFromQty, to: beforeToQty },
-        afterQuantity: { from: beforeFromQty - quantity, to: beforeToQty + quantity }
+        afterQuantity: { from: beforeFromQty - quantity, to: beforeToQty + quantity },
+        userName: currentUser.name,
+        employeeId: currentUser.employee_id
     };
 
     if (processTransaction(transaction, false, showError)) {
@@ -195,7 +206,32 @@ const handleVerifyChain = async () => {
     }
 };
 
-const handleRoleChange = async (userId, newRole) => {
+// *** Helper function to log admin actions (to avoid repetition) ***
+const logAdminActionToBlockchain = async (transaction) => {
+    try {
+        // We don't need to await this for the UI,
+        // but we await to catch errors.
+        const response = await fetch(`${API_BASE_URL}/api/blockchain`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify(transaction)
+        });
+        if (!response.ok) {
+            const err = await response.json();
+            throw new Error(err.message || 'Blockchain logging failed');
+        }
+        const newBlock = await response.json();
+        blockchain.push(newBlock); // Add to local chain
+        console.log('Admin action logged to blockchain:', newBlock);
+    } catch (error) {
+        // Log the error, but don't block the user
+        showError(`Action was successful, but logging to blockchain failed: ${error.message}`);
+    }
+};
+
+// *** MODIFIED ***
+const handleRoleChange = async (userId, userName, newRole) => {
     if (!permissionService.can('MANAGE_USERS')) return showError("Access Denied.");
     try {
         const response = await fetch(`${API_BASE_URL}/api/users/${userId}/role`, {
@@ -210,6 +246,14 @@ const handleRoleChange = async (userId, newRole) => {
         }
         showSuccess(`Role for ${data.user.name} updated to ${newRole}.`);
         
+        // *** ADDED: Log to blockchain ***
+        await logAdminActionToBlockchain({
+            txType: "ADMIN_EDIT_ROLE",
+            targetUserId: data.user.id,
+            targetUser: data.user.name,
+            targetRole: data.user.role
+        });
+
         if (data.user.id === currentUser.id) { 
             currentUser = data.user;
             document.getElementById('user-role').textContent = currentUser.role;
@@ -218,10 +262,57 @@ const handleRoleChange = async (userId, newRole) => {
         }
     } catch (error) {
         showError(error.message);
-        renderAdminPanel();
+        renderAdminPanel(); // Re-render to reset on failure
     }
 };
 
+// *** NEW FUNCTION ***
+const handleEmailChange = async (userId, userName, newEmail, oldEmail, inputElement) => {
+    if (!permissionService.can('MANAGE_USERS')) return showError("Access Denied.");
+    
+    // Do nothing if email hasn't changed
+    if (newEmail === oldEmail) return;
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/users/${userId}/email`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ email: newEmail })
+        });
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.message || 'Failed to update email');
+        }
+        showSuccess(`Email for ${data.user.name} updated.`);
+        
+        // Update the 'oldEmail' data attribute to the new email
+        if (inputElement) {
+            inputElement.dataset.oldEmail = newEmail;
+        }
+
+        // *** ADDED: Log to blockchain ***
+        await logAdminActionToBlockchain({
+            txType: "ADMIN_EDIT_EMAIL",
+            targetUserId: data.user.id,
+            targetUser: data.user.name,
+            targetEmail: data.user.email,
+            oldEmail: oldEmail
+        });
+
+        // Update the login dropdown if it's visible
+        await populateLoginDropdown();
+
+    } catch (error) {
+        showError(error.message);
+        // Reset the input value to the old email on failure
+        if (inputElement) {
+            inputElement.value = oldEmail;
+        }
+    }
+};
+
+// *** MODIFIED ***
 const handleAddUser = async (form) => {
     if (!permissionService.can('MANAGE_USERS')) return showError("Access Denied.");
 
@@ -246,13 +337,62 @@ const handleAddUser = async (form) => {
         
         showSuccess(`User ${data.user.name} created successfully!`);
         form.reset();
-        renderAdminPanel();
+        
+        // *** ADDED: Log to blockchain ***
+        await logAdminActionToBlockchain({
+            txType: "ADMIN_CREATE_USER",
+            targetUserId: data.user.id,
+            targetUser: data.user.name,
+            targetEmail: data.user.email,
+            targetRole: data.user.role,
+            targetEmployeeId: data.user.employee_id
+        });
+
+        renderAdminPanel(); // Now call render *after* logging
         await populateLoginDropdown();
         
     } catch (error) {
         showError(error.message);
     }
 };
+
+// *** NEW FUNCTION ***
+const handleDeleteUser = async (userId, userName, userEmail) => {
+    if (!permissionService.can('MANAGE_USERS')) return showError("Access Denied.");
+
+    if (!confirm(`Are you sure you want to permanently delete ${userName} (${userEmail})?\n\nThis action is irreversible and will be logged to the blockchain.`)) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/users/${userId}`, {
+            method: 'DELETE',
+            credentials: 'include'
+        });
+        
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.message || 'Failed to delete user');
+        }
+        
+        showSuccess(`User ${userName} deleted.`);
+
+        // *** ADDED: Log to blockchain ***
+        await logAdminActionToBlockchain({
+            txType: "ADMIN_DELETE_USER",
+            targetUserId: userId,
+            targetUser: userName,
+            targetEmail: userEmail
+        });
+
+        renderAdminPanel(); // Re-render the list
+        await populateLoginDropdown(); // Update the login dropdown
+
+    } catch (error) {
+        showError(error.message);
+    }
+};
+
 
 const handleSnapshotForm = async (form, navigateTo) => {
     if (!permissionService.can('VIEW_HISTORICAL_STATE')) return showError("Access Denied.");

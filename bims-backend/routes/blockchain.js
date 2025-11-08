@@ -30,6 +30,15 @@ const SELECT_BLOCKCHAIN_FIELDS = `
     FROM blockchain
 `;
 
+// *** NEW ***
+// Define transaction types that bypass inventory validation
+const ADMIN_TRANSACTION_TYPES = [
+    'ADMIN_CREATE_USER',
+    'ADMIN_EDIT_ROLE',
+    'ADMIN_EDIT_EMAIL',
+    'ADMIN_DELETE_USER'
+];
+
 module.exports = (pool) => {
 
     // Helper function to get or create the Genesis block
@@ -75,9 +84,10 @@ module.exports = (pool) => {
         const transaction = req.body;
         
         // Inject user details from the session
-        transaction.userId = req.session.user.id;
-        transaction.userName = req.session.user.name;
-        transaction.employeeId = req.session.user.employee_id;
+        // This is the ADMIN performing the action
+        transaction.adminUserId = req.session.user.id;
+        transaction.adminUserName = req.session.user.name;
+        transaction.adminEmployeeId = req.session.user.employee_id;
 
         try {
             await getGenesisBlock();
@@ -85,13 +95,24 @@ module.exports = (pool) => {
             const chainResult = await pool.query(`${SELECT_BLOCKCHAIN_FIELDS} ORDER BY index ASC`);
             const currentChain = chainResult.rows;
 
-            console.log('🔬 Validating transaction...');
-            const { success, error } = validateTransaction(transaction, currentChain);
-            if (!success) {
-                console.log('❌ Validation failed:', error);
-                return res.status(400).json({ message: error });
+            // *** MODIFIED VALIDATION STEP ***
+            if (ADMIN_TRANSACTION_TYPES.includes(transaction.txType)) {
+                // This is an admin action.
+                // It doesn't affect inventory, so we don't validate it
+                // against the inventory state. We just trust it (it's from an Admin)
+                // and log it.
+                console.log('✅ Admin action detected. Bypassing inventory validation.');
+            } else {
+                // This is an inventory transaction. Validate it.
+                console.log('🔬 Validating inventory transaction...');
+                const { success, error } = validateTransaction(transaction, currentChain);
+                if (!success) {
+                    console.log('❌ Validation failed:', error);
+                    return res.status(400).json({ message: error });
+                }
+                console.log('✅ Transaction is valid.');
             }
-            console.log('✅ Transaction is valid.');
+            // *** END MODIFICATION ***
 
             const lastBlock = currentChain[currentChain.length - 1];
 

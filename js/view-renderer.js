@@ -1,3 +1,5 @@
+// Lap/js/view-renderer.js
+
 // --- View Rendering Functions ---
 
 const renderDashboard = async () => {
@@ -288,7 +290,7 @@ const renderAdminPanel = async () => {
     const tableBody = appContent.querySelector('#user-management-table');
     if (!tableBody) return;
     
-    tableBody.innerHTML = '<tr><td colspan="4" class="table-cell text-center">Loading users...</td></tr>';
+    tableBody.innerHTML = '<tr><td colspan="5" class="table-cell text-center">Loading users...</td></tr>';
     
     try {
         const response = await fetch(`${API_BASE_URL}/api/users`, {
@@ -307,24 +309,52 @@ const renderAdminPanel = async () => {
             const row = document.createElement('tr');
             const isCurrentUser = user.id === currentUser.id;
             
+            // *** MODIFIED INNERHTML ***
             row.innerHTML = `
                 <td class="table-cell font-medium">${user.name}</td>
                 <td class="table-cell text-slate-500">${user.employee_id}</td>
-                <td class="table-cell text-slate-500">${user.email}</td>
                 <td class="table-cell">
-                    <select data-user-id="${user.id}" class="role-select block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" ${isCurrentUser ? 'disabled' : ''}>
+                    <input 
+                        type="email" 
+                        class="user-email-input form-input-underline" 
+                        data-user-id="${user.id}" 
+                        data-user-name="${user.name}"
+                        data-old-email="${user.email}"
+                        value="${user.email}" 
+                        ${isCurrentUser ? 'disabled' : ''}
+                    >
+                </td>
+                <td class="table-cell">
+                    <select 
+                        class="role-select block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" 
+                        data-user-id="${user.id}" 
+                        data-user-name="${user.name}"
+                        ${isCurrentUser ? 'disabled' : ''}
+                    >
                         <option value="Admin" ${user.role === 'Admin' ? 'selected' : ''}>Admin</option>
                         <option value="Inventory Manager" ${user.role === 'Inventory Manager' ? 'selected' : ''}>Inventory Manager</option>
                         <option value="Auditor" ${user.role === 'Auditor' ? 'selected' : ''}>Auditor</option>
                     </select>
                 </td>
+                <td class="table-cell">
+                    <button 
+                        class="user-delete-button text-red-600 hover:text-red-800 disabled:text-slate-400" 
+                        data-user-id="${user.id}"
+                        data-user-name="${user.name}"
+                        data-user-email="${user.email}"
+                        ${isCurrentUser ? 'disabled' : ''}
+                    >
+                        <i class="ph-bold ph-trash text-lg"></i>
+                    </button>
+                </td>
             `;
+            // *** END MODIFICATION ***
             tableBody.appendChild(row);
         });
 
     } catch (error) {
         showError(error.message);
-        tableBody.innerHTML = `<tr><td colspan="4" class="table-cell text-center text-red-600">Error loading users.</td></tr>`;
+        tableBody.innerHTML = `<tr><td colspan="5" class="table-cell text-center text-red-600">Error loading users.</td></tr>`;
     }
 
     // --- ADD THIS AT THE END OF THE FUNCTION ---

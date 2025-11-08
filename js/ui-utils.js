@@ -36,11 +36,23 @@ const createLedgerBlockElement = (block) => {
     const blockElement = document.createElement('div');
     blockElement.className = 'border border-slate-200 rounded-lg p-3 bg-white shadow-sm';
     
-    const { txType, itemSku, itemName, quantity, fromLocation, toLocation, location, userName, employeeId, beforeQuantity, afterQuantity, price, category } = block.transaction;
+    const { 
+        txType, itemSku, itemName, quantity, 
+        fromLocation, toLocation, location, userName, 
+        employeeId, beforeQuantity, afterQuantity, 
+        price, category,
+        // NEW admin fields
+        adminUserName, targetUser, targetEmail, targetRole, oldEmail
+    } = block.transaction;
+    
     let transactionHtml = '';
     let detailsHtml = '';
 
+    // Admin user is the one who performed the action
+    const adminHtml = `<li>Admin: <strong>${adminUserName || 'N/A'}</strong></li>`;
+    // Regular user is for inventory actions
     const userHtml = `<li>User: <strong>${userName || 'N/A'}</strong> (${employeeId || 'N/A'})</li>`;
+
 
     switch (txType) {
         case 'CREATE_ITEM':
@@ -65,6 +77,32 @@ const createLedgerBlockElement = (block) => {
             detailsHtml = `<li>Before: ${beforeQuantity}, After: ${afterQuantity}</li>
                            ${userHtml}`;
             break;
+        
+        // *** NEW CASES ***
+        case 'ADMIN_CREATE_USER':
+            transactionHtml = `<span class="font-semibold text-purple-600">ADMIN CREATE USER</span>`;
+            detailsHtml = `<li>Target: <strong>${targetUser}</strong> (${targetEmail})</li>
+                           <li>Role: <strong>${targetRole}</strong></li>
+                           ${adminHtml}`;
+            break;
+        case 'ADMIN_EDIT_ROLE':
+            transactionHtml = `<span class="font-semibold text-purple-600">ADMIN EDIT ROLE</span> for <strong>${targetUser}</strong>`;
+            detailsHtml = `<li>Change: Role → <strong>${targetRole}</strong></li>
+                           ${adminHtml}`;
+            break;
+        case 'ADMIN_EDIT_EMAIL':
+            transactionHtml = `<span class="font-semibold text-purple-600">ADMIN EDIT EMAIL</span> for <strong>${targetUser}</strong>`;
+            detailsHtml = `<li>Change: Email → <strong>${targetEmail}</strong></li>
+                           <li>Old Email: ${oldEmail}</li>
+                           ${adminHtml}`;
+            break;
+        case 'ADMIN_DELETE_USER':
+            transactionHtml = `<span class="font-semibold text-red-700">ADMIN DELETE USER</span>`;
+            detailsHtml = `<li>Target: <strong>${targetUser}</strong> (${targetEmail})</li>
+                           ${adminHtml}`;
+            break;
+        // *** END NEW CASES ***
+
         default:
              transactionHtml = `Unknown transaction: ${txType}`;
     }
@@ -130,6 +168,12 @@ const populateLoginDropdown = async () => {
         const users = await response.json();
         loginEmailSelect.innerHTML = '';
         
+        if (users.length === 0) {
+             loginEmailSelect.innerHTML = '<option value="">No users</option>';
+             loginEmailInput.value = '';
+             return;
+        }
+
         users.forEach((user, index) => {
             const option = document.createElement('option');
             option.value = user.email;
