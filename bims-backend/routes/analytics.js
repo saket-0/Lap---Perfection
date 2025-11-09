@@ -35,7 +35,7 @@ const getStdDev = (array) => {
 module.exports = (pool) => {
 
     /**
-     * *** NEW ENDPOINT: Consolidated KPIs ***
+     * *** MODIFIED ENDPOINT: Consolidated KPIs ***
      * GET /api/analytics/kpis
      * Calculates several new insightful KPIs for the main analytics page.
      */
@@ -44,36 +44,65 @@ module.exports = (pool) => {
         try {
             const chainResult = await pool.query(`${SELECT_BLOCKCHAIN_FIELDS} ORDER BY index ASC`);
             const currentChain = chainResult.rows;
+            
+            // --- NEW: Fetch active locations from DB ---
+            const locationsResult = await pool.query('SELECT name FROM locations WHERE is_archived = false');
+            const activeLocations = locationsResult.rows.map(r => r.name);
+            // --- END NEW ---
 
             if (currentChain.length <= 1) {
                 return res.status(200).json({
-                    txMix: [],
                     topMovers: [],
                     highValueItems: [],
-                    staleInventory: []
+                    staleInventory: [],
+                    dateLabels: [],
+                    txMixLineData: {},
+                    locationActivityData: {}
                 });
             }
 
             const { inventory } = rebuildStateAt(currentChain, new Date().toISOString());
             
             const now = new Date();
-            const thirtyDaysAgo = new Date(new Date().setDate(now.getDate() - 30));
             const ninetyDaysAgo = new Date(new Date().setDate(now.getDate() - 90));
 
-            // --- 1. Transaction Mix ---
-            const txMix = new Map();
+            // --- NEW: Generate 7-Day Labels ---
+            const dateLabels = [];
+            const dayMap = new Map(); // Maps 'YYYY-MM-DD' to index 0-6
+            for (let i = 6; i >= 0; i--) {
+                const d = new Date();
+                d.setDate(d.getDate() - i);
+                const label = d.toISOString().split('T')[0];
+                dateLabels.push(label);
+                dayMap.set(label, 6 - i);
+            }
+            const sevenDaysAgo = new Date(new Date().setDate(now.getDate() - 7));
+            // --- END NEW ---
+            
             // --- 2. Top Movers (30d) ---
+            const thirtyDaysAgo = new Date(new Date().setDate(now.getDate() - 30));
             const topMoversMap = new Map();
+            
             // --- 3. Stale Inventory (90d) ---
             const recentMovement = new Set();
+            
+            // --- 4. NEW: Data for Line Charts ---
+            const txMixLineData = {
+                'CREATE_ITEM': Array(7).fill(0),
+                'STOCK_IN': Array(7).fill(0),
+                'STOCK_OUT': Array(7).fill(0),
+                'MOVE': Array(7).fill(0)
+            };
+            const locationActivityData = {};
+            activeLocations.forEach(loc => {
+                locationActivityData[loc] = Array(7).fill(0);
+            });
+            // --- END NEW ---
             
             currentChain.forEach(block => {
                 if (block.index === 0) return;
                 const tx = block.transaction;
                 const blockDate = new Date(block.timestamp);
-
-                // 1. Tx Mix
-                txMix.set(tx.txType, (txMix.get(tx.txType) || 0) + 1);
 
                 // 2. Top Movers
                 if (tx.txType === 'STOCK_OUT' && blockDate > thirtyDaysAgo) {
@@ -84,6 +113,31 @@ module.exports = (pool) => {
                 if ((tx.txType === 'STOCK_OUT' || tx.txType === 'MOVE') && blockDate > ninetyDaysAgo) {
                     recentMovement.add(tx.itemSku);
                 }
+
+                // --- 4. NEW: Populate Line Chart Data ---
+                if (blockDate > sevenDaysAgo) {
+                    const dateStr = blockDate.toISOString().split('T')[0];
+                    if (dayMap.has(dateStr)) {
+                        const dayIndex = dayMap.get(dateStr);
+
+                        // A. Populate Tx Mix Data
+                        if (txMixLineData[tx.txType]) {
+                            txMixLineData[tx.txType][dayIndex]++;
+                        }
+
+                        // B. Populate Location Activity Data
+                        if (tx.location && locationActivityData[tx.location]) {
+                            locationActivityData[tx.location][dayIndex]++;
+                        }
+                        if (tx.toLocation && locationActivityData[tx.toLocation]) {
+                            locationActivityData[tx.toLocation][dayIndex]++;
+                        }
+                        if (tx.fromLocation && locationActivityData[tx.fromLocation]) {
+                            locationActivityData[tx.fromLocation][dayIndex]++;
+                        }
+                    }
+                }
+                // --- END NEW ---
             });
 
             // --- Process KPIs ---
@@ -136,10 +190,13 @@ module.exports = (pool) => {
             
             console.log('✅ New KPIs generated.');
             res.status(200).json({
-                txMix: Array.from(txMix.entries()),
+                // txMix: (REMOVED)
                 topMovers: topMovers,
                 highValueItems: sortedHighValue,
-                staleInventory: staleInventory.slice(0, 5) // Limit to 5 for UI
+                staleInventory: staleInventory.slice(0, 5),
+                dateLabels: dateLabels,                 // ADDED
+                txMixLineData: txMixLineData,           // ADDED
+                locationActivityData: locationActivityData // ADDED
             });
 
         } catch (e) {
@@ -219,7 +276,6 @@ module.exports = (pool) => {
     /**
      * FEATURE 2: Dedicated Anomaly Report (NEW)
      * GET /api/analytics/anomalies-report
-     * Scans the entire blockchain for multiple types of anomalies
      */
     router.get('/anomalies-report', isAuthenticated, async (req, res) => {
         console.log('🛡️ Running full anomaly detection report...');

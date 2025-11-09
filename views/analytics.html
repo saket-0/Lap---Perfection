@@ -3,7 +3,6 @@
     <p class="text-lg text-slate-600">Verifiable business insights from the immutable ledger.</p>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        
         <div class="bg-white p-6 rounded-lg shadow-md">
             <h2 class="text-2xl font-semibold mb-4 text-slate-800">Transaction Velocity (Last 7 Days)</h2>
             <canvas id="tx-velocity-chart"></canvas>
@@ -13,25 +12,35 @@
             <h2 class="text-2xl font-semibold mb-4 text-slate-800">Transaction Activity by Hour (UTC)</h2>
             <canvas id="tx-heatmap-chart"></canvas>
         </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div class="bg-white p-6 rounded-lg shadow-md">
+            <h2 class="text-2xl font-semibold mb-4 text-slate-800">Transaction Mix (Last 7 Days)</h2>
+            <canvas id="tx-mix-line-chart"></canvas>
+        </div>
 
         <div class="bg-white p-6 rounded-lg shadow-md">
-            <h2 class="text-2xl font-semibold mb-4 text-slate-800">Inventory Value by Location</h2>
-            <div class="max-w-xs mx-auto">
-                <canvas id="inventory-distribution-chart"></canvas>
+             <h2 class="text-2xl font-semibold mb-4 text-slate-800">Location Activity (Last 7 Days)</h2>
+            <canvas id="location-activity-chart"></canvas>
+        </div>
+    </div>
+    
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        
+        <div class="space-y-8">
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <h2 class="text-2xl font-semibold mb-4 text-slate-800">Inventory Value by Location</h2>
+                <div class="max-w-xs mx-auto">
+                    <canvas id="inventory-distribution-chart"></canvas>
+                </div>
             </div>
-        </div>
 
-        <div class="bg-white p-6 rounded-lg shadow-md">
-             <h2 class="text-2xl font-semibold mb-4 text-slate-800">Inventory Value by Category</h2>
-             <div class="max-w-xs mx-auto">
-                <canvas id="inventory-category-chart"></canvas>
-             </div>
-        </div>
-
-        <div class="bg-white p-6 rounded-lg shadow-md">
-            <h2 class="text-2xl font-semibold mb-4 text-slate-800">Transaction Mix</h2>
-            <div class="max-w-xs mx-auto">
-                <canvas id="tx-mix-chart"></canvas>
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                 <h2 class="text-2xl font-semibold mb-4 text-slate-800">Inventory Value by Category</h2>
+                 <div class="max-w-xs mx-auto">
+                    <canvas id="inventory-category-chart"></canvas>
+                 </div>
             </div>
         </div>
 
@@ -44,7 +53,7 @@
                         <p class="text-slate-500">Loading...</p>
                     </div>
                 </div>
-                <div class_ ="border-t border-slate-200 pt-4">
+                <div class="border-t border-slate-200 pt-4">
                     <h3 class="font-semibold text-slate-800 mb-2">Top 5 High-Value Items</h3>
                     <div id="analytics-high-value" class="space-y-2 text-sm">
                         <p class="text-slate-500">Loading...</p>
@@ -58,6 +67,6 @@
                 </div>
             </div>
         </div>
-
     </div>
+
 </div>

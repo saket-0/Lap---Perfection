@@ -80,14 +80,14 @@ const renderItemStockChart = (productId) => {
 };
 
 
-// *** MODIFIED: This function now calls the restored charts ***
+// *** MODIFIED: This function now calls the new charts ***
 const renderAnalyticsPage = async () => {
     try {
         // Render the charts that use local data
         renderTxVelocityChart();
         renderTxHeatmapChart();
-        renderInventoryDistributionChart(); // <-- ADDED BACK
-        renderInventoryCategoryChart(); // <-- ADDED BACK
+        renderInventoryDistributionChart(); 
+        renderInventoryCategoryChart(); 
 
         // Fetch the new consolidated KPIs
         const response = await fetch(`${API_BASE_URL}/api/analytics/kpis`, {
@@ -99,10 +99,16 @@ const renderAnalyticsPage = async () => {
         const kpis = await response.json();
 
         // Render the new charts/lists
-        renderTransactionMixChart(kpis.txMix);
+        // renderTransactionMixChart(kpis.txMix); // <-- REMOVED
         renderTopMoversList(kpis.topMovers);
         renderHighValueList(kpis.highValueItems);
         renderStaleInventoryList(kpis.staleInventory);
+        
+        // --- ADDED NEW CHART RENDERERS ---
+        renderTxMixLineChart(kpis.txMixLineData, kpis.dateLabels);
+        renderLocationActivityChart(kpis.locationActivityData, kpis.dateLabels);
+        // --- END ADDED ---
+
 
     } catch (error) {
         console.error("Failed to render analytics page:", error);
@@ -292,32 +298,9 @@ const renderInventoryCategoryChart = () => {
     currentCharts.push(categoryChart);
 };
 
+// --- 'renderTransactionMixChart' FUNCTION REMOVED ---
+
 // --- New KPI Functions from last step ---
-
-const renderTransactionMixChart = (txMixData) => {
-    const ctx = document.getElementById('tx-mix-chart')?.getContext('2d');
-    if (!ctx) return;
-
-    const labels = txMixData.map(d => d[0]);
-    const data = txMixData.map(d => d[1]);
-
-    const pieChart = new Chart(ctx, {
-        type: 'pie',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Transaction Mix',
-                data: data,
-                backgroundColor: ['#4f46e5', '#3b82f6', '#10b981', '#f97316', '#ef4444']
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: { legend: { position: 'top' } }
-        }
-    });
-    currentCharts.push(pieChart);
-};
 
 // *** MODIFIED: Added class and data-product-id ***
 const renderTopMoversList = (topMovers) => {
@@ -383,3 +366,109 @@ const renderStaleInventoryList = (staleInventory) => {
 };
 
 // *** "renderProfileLocationChart" FUNCTION REMOVED ***
+
+// --- ADDED NEW CHART RENDERER FUNCTIONS ---
+
+const renderTxMixLineChart = (data, labels) => {
+    const ctx = document.getElementById('tx-mix-line-chart')?.getContext('2d');
+    if (!ctx || !data || !labels) return;
+
+    const datasets = [
+        {
+            label: 'Create Item',
+            data: data['CREATE_ITEM'] || [],
+            borderColor: '#10b981', // green-500
+            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+            fill: false,
+            tension: 0.1
+        },
+        {
+            label: 'Stock In',
+            data: data['STOCK_IN'] || [],
+            borderColor: '#3b82f6', // blue-500
+            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+            fill: false,
+            tension: 0.1
+        },
+        {
+            label: 'Stock Out',
+            data: data['STOCK_OUT'] || [],
+            borderColor: '#ef4444', // red-500
+            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+            fill: false,
+            tension: 0.1
+        },
+        {
+            label: 'Move',
+            data: data['MOVE'] || [],
+            borderColor: '#f97316', // orange-500
+            backgroundColor: 'rgba(249, 115, 22, 0.1)',
+            fill: false,
+            tension: 0.1
+        }
+    ];
+
+    const lineChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: datasets
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { position: 'top' } },
+            scales: { 
+                y: { 
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1 // Ensure we only count in whole numbers
+                    }
+                } 
+            }
+        }
+    });
+    currentCharts.push(lineChart);
+};
+
+const renderLocationActivityChart = (data, labels) => {
+    const ctx = document.getElementById('location-activity-chart')?.getContext('2d');
+    if (!ctx || !data || !labels) return;
+
+    // Use theme-aware colors
+    const colors = ['#4f46e5', '#f97316', '#10b981', '#ef4444', '#6b7280', '#fbbf24', '#8b5cf6'];
+    let colorIndex = 0;
+
+    const datasets = [];
+    for (const locationName in data) {
+        datasets.push({
+            label: locationName,
+            data: data[locationName],
+            borderColor: colors[colorIndex % colors.length],
+            backgroundColor: colors[colorIndex % colors.length] + '1A', // 10% opacity
+            fill: false,
+            tension: 0.1
+        });
+        colorIndex++;
+    }
+
+    const lineChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: datasets
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { position: 'top' } },
+            scales: { 
+                y: { 
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1 // Ensure we only count in whole numbers
+                    }
+                } 
+            }
+        }
+    });
+    currentCharts.push(lineChart);
+};
