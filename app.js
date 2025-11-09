@@ -80,7 +80,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         profile: document.getElementById('nav-profile'),
     };
     
-    // --- TEMPLATES OBJECT IS REMOVED ---
+    // --- ** NEW: SSE Connection State ** ---
+    let sseConnection = null;
+    let currentViewId = 'dashboard'; // Keep track of the current view
+    // --- ** END NEW ** ---
     
     // --- NAVIGATION & UI CONTROL ---
     const showLogin = () => {
@@ -105,6 +108,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         await loadBlockchain();
         rebuildInventoryState();
+        
+        // --- ** NEW: Start SSE Connection ** ---
+        startSSEConnection();
+        // --- ** END NEW ** ---
+        
         navigateTo('dashboard');
     };
 
@@ -152,10 +160,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // 3. Get the configuration for the requested view, or default to dashboard
         let viewConfig = viewMap[view] || viewMap.dashboard;
+        
+        // *** NEW: Track the current view ***
+        currentViewId = view; 
 
         // 4. Check permissions
         if (viewConfig.permission && !permissionService.can(viewConfig.permission)) {
             showError("Access Denied.");
+            // *** MODIFIED: Set currentViewId before recursive call ***
+            currentViewId = 'dashboard';
             return navigateTo('dashboard'); // Redirect to dashboard
         }
 
@@ -175,7 +188,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         } catch (error) {
             console.error(`Error rendering view ${view}:`, error);
-            showError(`Error rendering ${view} page: ${error.message}`);
+            if (view === 'detail') {
+                // This is a special case: if rendering a detail page fails
+                // (e.g., product was deleted by another user), go to product list
+                showError(`Could not load product. It may have been deleted.`);
+                navigateTo('products');
+            } else {
+                showError(`Error rendering ${view} page: ${error.message}`);
+            }
         }
     };
     
@@ -198,7 +218,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         loginEmailInput.value = loginEmailSelect.value;
     });
 
-    logoutButton.addEventListener('click', () => authService.logout(showLogin));
+    logoutButton.addEventListener('click', () => {
+        // --- ** NEW: Close SSE connection on logout ** ---
+        if (sseConnection) {
+            sseConnection.close();
+            sseConnection = null;
+            console.log('SSE Connection closed by logout.');
+        }
+        // --- ** END NEW ** ---
+        authService.logout(showLogin);
+    });
+    
     navLinks.dashboard.addEventListener('click', (e) => { e.preventDefault(); navigateTo('dashboard'); });
     navLinks.profile.addEventListener('click', (e) => { e.preventDefault(); navigateTo('profile'); });
     navLinks.products.addEventListener('click', (e) => { e.preventDefault(); navigateTo('products'); });
@@ -238,7 +268,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         if (e.target.id === 'add-location-form') {
-        await handleAddLocation(e.target);
+            await handleAddLocation(e.target);
         }
         if (e.target.id === 'add-category-form') {
             await handleAddCategory(e.target);
@@ -251,20 +281,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
-    // *** MODIFIED: Generalized 'focus' event listener for app content ***
+    // ... (focus event listeners as before) ...
     appContent.addEventListener('focus', (e) => {
-        // Check if the focused element is an INPUT tag
         if (e.target.tagName === 'INPUT') {
-            // Exclude search bars
             if (e.target.id === 'product-search-input') {
                 return;
             }
-            // Exclude date/time pickers
             if (e.target.type === 'datetime-local') {
                 return;
             }
-            
-            // Select text for all other relevant types
             if (e.target.type === 'text' || 
                 e.target.type === 'number' || 
                 e.target.type === 'email' || 
@@ -273,27 +298,24 @@ document.addEventListener('DOMContentLoaded', async () => {
                 e.target.select();
             }
         }
-    }, true); // Use capture phase to ensure it fires reliably
+    }, true);
 
-    // *** NEW: 'focus' event listener for login overlay ***
     loginOverlay.addEventListener('focus', (e) => {
         if (e.target.tagName === 'INPUT' && (e.target.type === 'email' || e.target.type === 'password' || e.target.type === 'text')) {
             e.target.select();
         }
     }, true);
-    // *** END NEW/MODIFIED SECTION ***
+
 
     appContent.addEventListener('click', async (e) => {
         
-        // --- ADD THIS NEW HANDLER ---
+        // ... (copy-hash-button listener as before) ...
         if (e.target.closest('.copy-hash-button')) {
             const button = e.target.closest('.copy-hash-button');
             const hashToCopy = button.dataset.hash;
-            
             if (!hashToCopy) {
                 return showError('No hash data found to copy.');
             }
-
             try {
                 await navigator.clipboard.writeText(hashToCopy);
                 showSuccess('Hash copied to clipboard!');
@@ -301,9 +323,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 console.error('Failed to copy hash:', err);
                 showError('Failed to copy. Please copy manually.');
             }
-            return; // Stop further click propagation
+            return;
         }
-        // --- END NEW HANDLER ---
 
         if (e.target.closest('#back-to-list-button')) {
             navigateTo('products');
@@ -347,16 +368,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             await handleVerifyChain();
         }
 
-        // *** MODIFIED CLICK HANDLER ***
         if (e.target.closest('#delete-product-button')) {
             const productId = document.getElementById('detail-product-id').textContent;
             const productName = document.getElementById('detail-product-name').textContent;
-            // *** PASS navigateTo AS AN ARGUMENT ***
             await handleDeleteProduct(productId, productName, navigateTo);
             return;
         }
-        // *** END MODIFICATION ***
 
+        // ... (archive and delete listeners as before) ...
         const locArchive = e.target.closest('.location-archive-button');
         if (locArchive) {
             await handleArchiveLocation(locArchive.dataset.id, locArchive.dataset.name);
@@ -365,7 +384,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (catArchive) {
             await handleArchiveCategory(catArchive.dataset.id, catArchive.dataset.name);
         }
-        
         const deleteButton = e.target.closest('.user-delete-button');
         if (deleteButton) {
             const userId = deleteButton.dataset.userId;
@@ -391,15 +409,140 @@ document.addEventListener('DOMContentLoaded', async () => {
             await handleEmailChange(userId, userName, newEmail, oldEmail, e.target);
         }
 
-        // *** MODIFIED: Pass the element itself to the handler ***
         if (e.target.classList.contains('location-name-input')) {
             await handleRenameLocation(e.target);
         }
         if (e.target.classList.contains('category-name-input')) {
             await handleRenameCategory(e.target);
         }
-        // *** END MODIFICATION ***
     });
+    
+    
+    // --- ** NEW: SSE HELPER FUNCTIONS ** ---
+    
+    /**
+     * Establishes the Server-Sent Events (SSE) connection.
+     */
+    const startSSEConnection = () => {
+        if (sseConnection) {
+            sseConnection.close();
+        }
+
+        // Use the API_BASE_URL from config.js
+        // The { withCredentials: true } is vital for sending the session cookie
+        sseConnection = new EventSource(`${API_BASE_URL}/api/events`, { withCredentials: true });
+
+        sseConnection.onopen = () => {
+            console.log('SSE Connection Established.');
+        };
+
+        sseConnection.onerror = (error) => {
+            console.error('SSE Error:', error);
+            // This can happen on server restart or network loss.
+            // EventSource will automatically try to reconnect.
+        };
+
+        // Listen for our custom 'new-block' event from the server
+        sseConnection.addEventListener('new-block', (event) => {
+            const newBlock = JSON.parse(event.data);
+
+            // Double-check we don't already have this block
+            // (This prevents echo from our own submissions)
+            const blockExists = blockchain.some(block => block.hash === newBlock.hash);
+            if (blockExists) {
+                console.log('SSE: Block echo detected, ignoring.');
+                return;
+            }
+
+            // --- This is the core logic ---
+            // 1. Add the new block to our local state
+            console.log('SSE: Received new block from server.', newBlock);
+            blockchain.push(newBlock);
+            
+            // 2. Rebuild the inventory from the updated chain
+            rebuildInventoryState();
+
+            // 3. Show a notification (unless it was us)
+            const actor = newBlock.transaction.adminUserName || 'System';
+            if (newBlock.transaction.adminUserId !== currentUser.id) {
+                showSuccess(`System updated in real-time by ${actor}.`);
+            }
+
+            // 4. Intelligently refresh the current view
+            refreshCurrentView(newBlock);
+        });
+        
+        // This is the confirmation event we added in server.js
+        sseConnection.addEventListener('connected', (event) => {
+            console.log('SSE: Server confirmed connection.');
+        });
+    };
+
+    /**
+     * Intelligently refreshes only the current view based on the new block.
+     */
+    const refreshCurrentView = (newBlock) => {
+        // We use the 'currentViewId' variable we set in navigateTo
+        console.log(`SSE: Refreshing current view: ${currentViewId}`);
+        switch (currentViewId) {
+            case 'dashboard':
+                renderDashboard();
+                break;
+            case 'products':
+                renderProductList();
+                break;
+            case 'detail':
+                // We are on a detail page. Does this block affect this product?
+                const detailIdEl = document.getElementById('detail-product-id');
+                if (detailIdEl) {
+                    const currentProductId = detailIdEl.textContent;
+                    if (newBlock.transaction.itemSku === currentProductId) {
+                        // If item was deleted, go back to list
+                        if (newBlock.transaction.txType === 'DELETE_ITEM') {
+                            showError('This product was just deleted.');
+                            navigateTo('products');
+                        } else {
+                            destroyCurrentCharts(); // Destroy old chart
+                            renderProductDetail(currentProductId); // Re-render all details
+                        }
+                    }
+                }
+                break;
+            case 'ledger':
+                renderFullLedger();
+                break;
+            case 'admin':
+                // Any admin action, or a user profile action (which is on the same chain)
+                if (newBlock.transaction.txType.startsWith('ADMIN_') || newBlock.transaction.txType.startsWith('USER_')) {
+                    // Also need to re-fetch locations/categories if they were changed
+                    if (newBlock.transaction.txType.includes('LOCATION')) {
+                        fetchLocations().then(renderAdminPanel);
+                    } else if (newBlock.transaction.txType.includes('CATEGORY')) {
+                        fetchCategories().then(renderAdminPanel);
+                    } else {
+                        renderAdminPanel();
+                    }
+                }
+                break;
+            case 'analytics':
+                destroyCurrentCharts();
+                renderAnalyticsPage();
+                break;
+            case 'anomaly':
+                destroyCurrentCharts();
+                renderAnomalyPage();
+                break;
+            case 'profile':
+                // Check if this block belongs to the current user
+                if (newBlock.transaction.adminUserId === currentUser.id) {
+                    renderProfilePage();
+                }
+                break;
+            // 'snapshot' is a read-only historical view, no refresh needed.
+        }
+    };
+    // --- ** END NEW SSE FUNCTIONS ** ---
+
 
     // --- INITIALIZATION ---
     await populateLoginDropdown();

@@ -170,8 +170,10 @@ const permissionService = {
 // --- CORE LOGIC (Blockchain & Inventory) ---
 
 /**
- * MODIFIED: Sends the transaction to the server, which creates the block.
- * The server returns the new block, which we add to our local state.
+ * *** MODIFIED ***
+ * Sends the transaction to the server, which creates the block.
+ * It **DOES NOT** modify the local blockchain array.
+ * The server returns the new block, which we just return from this function.
  * Throws an error if the server rejects the transaction.
  */
 const addTransactionToChain = async (transaction) => {
@@ -192,9 +194,11 @@ const addTransactionToChain = async (transaction) => {
     }
     
     const newBlock = await response.json(); // Server returns the new, valid block
-    blockchain.push(newBlock);
     
-    // No need to call saveBlockchain()!
+    // *** MODIFICATION: We no longer push to the local 'blockchain' array here ***
+    // blockchain.push(newBlock); // <-- REMOVED
+
+    return newBlock; // Return the block so the form handler knows it succeeded
 };
 
 

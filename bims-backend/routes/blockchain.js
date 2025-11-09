@@ -48,7 +48,8 @@ const ADMIN_TRANSACTION_TYPES = [
 ];
 // *** END MODIFICATION ***
 
-module.exports = (pool) => {
+// *** MODIFIED: Accept the broadcast function ***
+module.exports = (pool, broadcastToClients) => {
 
     // Helper function to get or create the Genesis block
     async function getGenesisBlock() {
@@ -138,6 +139,14 @@ module.exports = (pool) => {
             );
             
             console.log(`✅ Block ${newBlock.index} added to chain.`);
+            
+            // --- *** THIS IS THE NEW PART *** ---
+            // Broadcast the new, valid block to all connected clients
+            if (broadcastToClients) {
+                broadcastToClients('new-block', newBlock);
+            }
+            // --- *** END NEW PART *** ---
+            
             res.status(201).json(newBlock);
 
         } catch (e) {

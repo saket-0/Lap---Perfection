@@ -66,11 +66,10 @@ async function isChainValid(blockchainArray) {
         const currentBlock = blockchainArray[i];
         const previousBlock = blockchainArray[i - 1];
 
-        // --- START: FINAL FIX ---
-        // Trim whitespace from hash fields during comparison
-        // to prevent data type or padding issues from the DB.
-        if (currentBlock.previousHash.trim() !== previousBlock.hash.trim()) {
-        // --- END: FINAL FIX ---
+        // --- START: MODIFICATION ---
+        // .trim() removed. Hashes are now compared directly.
+        if (currentBlock.previousHash !== previousBlock.hash) {
+        // --- END: MODIFICATION ---
             console.error(`Chain invalid: previousHash mismatch at block ${i}.`);
             return false;
         }
@@ -95,8 +94,10 @@ async function isChainValid(blockchainArray) {
         
         const recalculatedHash = await calculateHash(blockDataToRecalculate);
 
-        // Also trim here for the second check
-        if (currentBlock.hash.trim() !== recalculatedHash.trim()) {
+        // --- START: MODIFICATION ---
+        // .trim() removed. Hashes are now compared directly.
+        if (currentBlock.hash !== recalculatedHash) {
+        // --- END: MODIFICATION ---
             console.error(`Chain invalid: Hash mismatch at block ${i}. Expected ${currentBlock.hash} but got ${recalculatedHash}`);
             return false;
         }
