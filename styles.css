@@ -18,21 +18,24 @@ main {
 #full-ledger-display::-webkit-scrollbar,
 #recent-activity-list::-webkit-scrollbar,
 #low-stock-list::-webkit-scrollbar,
-#profile-activity-list::-webkit-scrollbar {
+#profile-activity-list::-webkit-scrollbar,
+.anomaly-list-scroll::-webkit-scrollbar {
     width: 6px;
 }
 #item-history-display::-webkit-scrollbar-track,
 #full-ledger-display::-webkit-scrollbar-track,
 #recent-activity-list::-webkit-scrollbar-track,
 #low-stock-list::-webkit-scrollbar-track,
-#profile-activity-list::-webkit-scrollbar-track {
+#profile-activity-list::-webkit-scrollbar-track,
+.anomaly-list-scroll::-webkit-scrollbar-track {
     background: #f1f5f9; /* slate-100 */
 }
 #item-history-display::-webkit-scrollbar-thumb,
 #full-ledger-display::-webkit-scrollbar-thumb,
 #recent-activity-list::-webkit-scrollbar-thumb,
 #low-stock-list::-webkit-scrollbar-thumb,
-#profile-activity-list::-webkit-scrollbar-thumb {
+#profile-activity-list::-webkit-scrollbar-thumb,
+.anomaly-list-scroll::-webkit-scrollbar-thumb {
     background: #94a3b8; /* slate-400 */
     border-radius: 3px;
 }
@@ -40,7 +43,8 @@ main {
 #full-ledger-display::-webkit-scrollbar-thumb:hover,
 #recent-activity-list::-webkit-scrollbar-thumb:hover,
 #low-stock-list::-webkit-scrollbar-thumb:hover,
-#profile-activity-list::-webkit-scrollbar-thumb:hover {
+#profile-activity-list::-webkit-scrollbar-thumb:hover,
+.anomaly-list-scroll::-webkit-scrollbar-thumb:hover {
     background: #64748b; /* slate-500 */
 }
 

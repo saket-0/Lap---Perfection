@@ -8,11 +8,17 @@ const renderAnomalyPage = async () => {
     // Show loading state
     const kpiTotal = appContent.querySelector('#kpi-total-anomalies');
     const kpiPercent = appContent.querySelector('#kpi-percent-flagged');
-    const listContainer = appContent.querySelector('#anomaly-list-container');
+    
+    // Get the new containers
+    const gridContainer = appContent.querySelector('#anomaly-grid-container');
+    const fullWidthContainer = appContent.querySelector('#anomaly-fullwidth-container');
+    const reportWrapper = appContent.querySelector('#anomaly-report-wrapper');
     
     kpiTotal.textContent = '...';
     kpiPercent.textContent = '...';
-    listContainer.innerHTML = '<p class="text-sm text-slate-500">Scanning blockchain for all anomalies...</p>';
+    gridContainer.innerHTML = '<p class="text-sm text-slate-500">Scanning blockchain for all anomalies...</p>';
+    fullWidthContainer.innerHTML = '';
+
 
     try {
         const response = await fetch(`${API_BASE_URL}/api/analytics/anomalies-report`, {
@@ -22,7 +28,7 @@ const renderAnomalyPage = async () => {
         if (!response.ok) {
             const err = await response.json();
             if (response.status === 403) {
-                listContainer.innerHTML = `<p class="text-lg text-yellow-700">${err.message}</p>`;
+                reportWrapper.innerHTML = `<p class="text-lg text-yellow-700">${err.message}</p>`;
             }
             throw new Error(err.message || 'Failed to load anomaly report');
         }
@@ -34,22 +40,25 @@ const renderAnomalyPage = async () => {
         kpiPercent.textContent = `${report.summary.percentOfTransactionsFlagged.toFixed(2)}%`;
 
         // Render the lists
-        listContainer.innerHTML = ''; // Clear loading
+        gridContainer.innerHTML = ''; // Clear loading
         
         if (report.summary.totalAnomalies === 0) {
-            listContainer.innerHTML = '<p class="text-sm text-slate-500">No anomalies found. The chain is clean.</p>';
+            gridContainer.innerHTML = '<p class="text-sm text-slate-500">No anomalies found. The chain is clean.</p>';
             return;
         }
 
-        renderAnomalyCategory(listContainer, 'Business Logic Anomalies', 'ph-hard-hat', report.basicAnomalies);
-        renderAnomalyCategory(listContainer, 'Statistical Outliers', 'ph-chart-line-up', report.statisticalOutliers);
-        renderAnomalyCategory(listContainer, 'Behavioral Anomalies', 'ph-user-switch', report.behavioralAnomalies);
+        // Render the lists into their specific containers
+        // --- MODIFIED ICON NAMES ---
+        renderAnomalyCategory(gridContainer, 'Business Logic Anomalies', 'ph-shield-warning', report.basicAnomalies);
+        renderAnomalyCategory(gridContainer, 'Statistical Outliers', 'ph-chart-line', report.statisticalOutliers);
+        renderAnomalyCategory(fullWidthContainer, 'Behavioral Anomalies', 'ph-users', report.behavioralAnomalies);
+        // --- END MODIFICATION ---
 
     } catch (error) {
         console.error(error.message);
         kpiTotal.textContent = 'Error';
         kpiPercent.textContent = 'Error';
-        listContainer.innerHTML = `<p class="text-sm text-red-600">Error loading anomaly report. ${error.message}</p>`;
+        reportWrapper.innerHTML = `<p class="text-sm text-red-600">Error loading anomaly report. ${error.message}</p>`;
     }
 };
 
@@ -58,7 +67,7 @@ const renderAnomalyCategory = (container, title, icon, anomalies) => {
     if (anomalies.length === 0) return;
 
     const categoryWrapper = document.createElement('div');
-    categoryWrapper.className = 'bg-white p-6 rounded-lg shadow-md';
+    categoryWrapper.className = 'bg-white p-6 rounded-lg shadow-md flex flex-col';
     
     let anomalyHtml = '';
     anomalies.forEach(anomaly => {
@@ -87,7 +96,7 @@ const renderAnomalyCategory = (container, title, icon, anomalies) => {
             </span>
             <h2 class="text-2xl font-semibold text-slate-800">${title} (${anomalies.length})</h2>
         </div>
-        <div class="space-y-4">
+        <div class="anomaly-list-scroll space-y-4 max-h-[60vh] overflow-y-auto pr-2">
             ${anomalyHtml}
         </div>
     `;
