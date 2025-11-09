@@ -61,6 +61,8 @@ const createLedgerBlockElement = (block) => {
         oldName,
         // Location/Category fields
         targetId, targetName, newName,
+        // *** NEW EDIT ITEM FIELDS ***
+        oldPrice, oldCategory, newPrice, newCategory
     } = block.transaction;
     // *** END MODIFICATION ***
     
@@ -91,6 +93,21 @@ const createLedgerBlockElement = (block) => {
             transactionHtml = `<span class="font-semibold text-red-600">STOCK OUT</span> <strong>${quantity}</strong> of <strong>${itemSku}</strong> from <strong>${location}</strong>`;
             detailsHtml = `<li>Before: ${beforeQuantity}, After: ${afterQuantity}</li>
                            ${actorHtml}`;
+            break;
+        
+        // *** NEW CASE ***
+        case 'ADMIN_EDIT_ITEM':
+            transactionHtml = `<span class="font-semibold text-purple-600">ADMIN EDIT ITEM</span> for <strong>${itemSku}</strong>`;
+            if (newName !== oldName) {
+                detailsHtml += `<li>Name: ${oldName} → <strong>${newName}</strong></li>`;
+            }
+            if (newPrice !== oldPrice) {
+                detailsHtml += `<li>Price: ₹${(oldPrice || 0).toFixed(2)} → <strong>₹${(newPrice || 0).toFixed(2)}</strong></li>`;
+            }
+            if (newCategory !== oldCategory) {
+                detailsHtml += `<li>Category: ${oldCategory} → <strong>${newCategory}</strong></li>`;
+            }
+            detailsHtml += actorHtml;
             break;
         
         // *** ADMIN CASES ***

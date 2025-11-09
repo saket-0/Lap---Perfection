@@ -9,15 +9,51 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div class="lg:col-span-2 space-y-8">
             <div class="bg-white p-6 rounded-lg shadow-md">
-                <div class="flex flex-col md:flex-row gap-6">
+                <form id="product-detail-form" class="flex flex-col md:flex-row gap-6">
                     <div class="w-full md:w-1/3 h-48 bg-slate-200 rounded-lg flex items-center justify-center">
                         <i class="ph-bold ph-package text-slate-400 text-6xl"></i>
                     </div>
-                    <div class="w-full md:w-2/3">
-                        <h2 id="detail-product-name" class="text-4xl font-bold text-slate-900">Product Name</h2>
-                        <p id="detail-product-id" class="text-sm text-slate-500 mt-1">SKU-000</p>
-                        <p id="detail-product-category" class="text-sm font-medium text-indigo-600 bg-indigo-100 px-2 py-0.5 rounded-full inline-block mt-2">Category</p>
-                        <p id="detail-product-price" class="text-3xl font-bold text-slate-700 mt-2">₹0.00</p>
+                    
+                    <input type="hidden" id="update-product-id" value="">
+                    
+                    <div class="w-full md:w-2/3 relative">
+                        
+                        <button id="product-edit-toggle-button" style="display: none;" class="absolute top-0 right-0 p-2 rounded-full text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-slate-800" title="Edit Product Details">
+                            <i class="ph-bold ph-pencil-simple text-lg"></i>
+                        </button>
+
+                        <div id="product-display-view">
+                            <h2 id="detail-product-name" class="text-4xl font-bold text-slate-900 pr-12">Product Name</h2>
+                            <p id="detail-product-id" class="text-sm text-slate-500 mt-1">SKU-000</p>
+                            <p id="detail-product-category" class="text-sm font-medium text-indigo-600 bg-indigo-100 px-2 py-0.5 rounded-full inline-block mt-2">Category</p>
+                            <p id="detail-product-price" class="text-3xl font-bold text-slate-700 mt-2">₹0.00</p>
+                        </div>
+                        
+                        <div id="product-edit-view" class="hidden space-y-3">
+                            <div>
+                                <label for="edit-product-name" class="block text-sm font-medium text-slate-700">Product Name</label>
+                                <input type="text" id="edit-product-name" class="form-input-underline !text-3xl !font-bold" required>
+                            </div>
+                            <div>
+                                <label for="edit-product-category" class="block text-sm font-medium text-slate-700">Category</label>
+                                <select id="edit-product-category" class="form-select-underline" required>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="edit-product-price" class="block text-sm font-medium text-slate-700">Price (₹)</label>
+                                <input type="number" id="edit-product-price" step="0.01" class="form-input-underline !text-2xl !font-bold" required>
+                            </div>
+                            <div class="flex gap-4 pt-2">
+                                <button type="submit" class="w-full md:w-auto bg-indigo-600 text-white py-2 px-6 rounded-md shadow-sm hover:bg-indigo-700 flex items-center justify-center gap-2">
+                                    <i class="ph-bold ph-save"></i>
+                                    Save
+                                </button>
+                                <button type="button" id="product-edit-cancel-button" class="w-full md:w-auto bg-slate-100 text-slate-700 py-2 px-6 rounded-md shadow-sm hover:bg-slate-200">
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+
                         <hr class="my-4">
                         <h3 class="text-lg font-semibold text-slate-800 mb-2">Current Stock Levels</h3>
                         <div id="detail-stock-levels" class="space-y-2">
@@ -28,7 +64,7 @@
                             <span id="detail-total-stock" class="text-2xl font-bold text-indigo-600">0</span>
                         </div>
                     </div>
-                </div>
+                </form>
             </div>
 
             <div id="update-stock-container" class="bg-white p-6 rounded-lg shadow-md space-y-8">
@@ -36,8 +72,6 @@
                     <h2 class="text-2xl font-semibold mb-4 text-slate-800">Update Stock (Add/Remove)</h2>
                     <p class="text-sm text-slate-500 mb-4">Add or remove stock from a single location.</p>
                     <form id="update-stock-form" class="space-y-4">
-                        <input type="hidden" id="update-product-id" value="">
-                        
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label for="update-quantity" class="block text-sm font-medium text-slate-700">Quantity</label>

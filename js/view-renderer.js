@@ -1,5 +1,28 @@
 // Lap/js/view-renderer.js
 
+// --- *** NEW HELPER FUNCTION *** ---
+/**
+ * Toggles the product detail view between display and edit modes.
+ * @param {boolean} isEditing - True to show edit form, false to show display info.
+ */
+const toggleProductEditMode = (isEditing) => {
+    const displayView = document.getElementById('product-display-view');
+    const editView = document.getElementById('product-edit-view');
+    const editButton = document.getElementById('product-edit-toggle-button');
+
+    if (isEditing) {
+        displayView.classList.add('hidden');
+        editView.classList.remove('hidden');
+        editButton.classList.add('hidden'); // Hide edit button while editing
+    } else {
+        displayView.classList.remove('hidden');
+        editView.classList.add('hidden');
+        editButton.classList.remove('hidden'); // Show edit button
+    }
+};
+// --- *** END NEW HELPER FUNCTION *** ---
+
+
 // --- View Rendering Functions ---
 
 const renderDashboard = async () => {
@@ -21,10 +44,6 @@ const renderDashboard = async () => {
     appContent.querySelector('#kpi-total-value').textContent = `₹${totalValue.toFixed(2)}`;
     appContent.querySelector('#kpi-total-units').textContent = totalUnits;
     appContent.querySelector('#kpi-transactions').textContent = blockchain.length;
-    
-    // --- *** THESE LINES ARE NOW REMOVED *** ---
-    // appContent.querySelector('#clear-db-button').style.display = permissionService.can('CLEAR_DB') ? 'flex' : 'none';
-    // appContent.querySelector('#verify-chain-button').style.display = permissionService.can('VERIFY_CHAIN') ? 'flex' : 'none';
     
     const activityContainer = appContent.querySelector('#recent-activity-container');
     if (activityContainer && permissionService.can('VIEW_LEDGER')) {
@@ -232,14 +251,30 @@ const renderProductDetail = (productId) => {
         return; 
     }
 
-    appContent.querySelector('#detail-product-name').textContent = product.productName;
-    appContent.querySelector('#detail-product-id').textContent = productId;
-    appContent.querySelector('#update-product-id').value = productId;
+    // --- *** MODIFIED: Get all new elements *** ---
+    const editButton = appContent.querySelector('#product-edit-toggle-button');
+    const editNameInput = appContent.querySelector('#edit-product-name');
+    const editPriceInput = appContent.querySelector('#edit-product-price');
+    const editCategorySelect = appContent.querySelector('#edit-product-category');
+    
+    const displayName = appContent.querySelector('#detail-product-name');
+    const displayId = appContent.querySelector('#detail-product-id');
+    const displayCategory = appContent.querySelector('#detail-product-category');
+    const displayPrice = appContent.querySelector('#detail-product-price');
+    
+    const sharedIdInput = appContent.querySelector('#update-product-id');
+    // --- *** END MODIFICATION *** ---
+
+    // Populate Display View
+    displayName.textContent = product.productName;
+    displayId.textContent = productId;
+    sharedIdInput.value = productId; // This is the shared hidden input
 
     const price = product.price || 0;
-    appContent.querySelector('#detail-product-price').textContent = `₹${price.toFixed(2)}`;
-    appContent.querySelector('#detail-product-category').textContent = product.category || 'Uncategorized';
+    displayPrice.textContent = `₹${price.toFixed(2)}`;
+    displayCategory.textContent = product.category || 'Uncategorized';
 
+    // Populate Stock Update Forms
     populateLocationDropdown(appContent.querySelector('#update-location'));
     populateLocationDropdown(appContent.querySelector('#move-from-location'));
     populateLocationDropdown(appContent.querySelector('#move-to-location'));
@@ -270,6 +305,18 @@ const renderProductDetail = (productId) => {
 
     appContent.querySelector('#detail-total-stock').textContent = `${totalStock} units`;
     
+    // --- *** MODIFIED: Populate Edit Form *** ---
+    if (editButton) {
+        editNameInput.value = product.productName;
+        editPriceInput.value = price.toFixed(2);
+        populateCategoryDropdown(editCategorySelect);
+        editCategorySelect.value = product.category || 'Uncategorized';
+        
+        // Make sure edit form is hidden on render
+        toggleProductEditMode(false); 
+    }
+    // --- *** END MODIFICATION *** ---
+
     const dangerZone = appContent.querySelector('#danger-zone-container');
     const updateStock = appContent.querySelector('#update-stock-container');
     const archivedMsg = appContent.querySelector('#product-archived-message');
@@ -281,11 +328,13 @@ const renderProductDetail = (productId) => {
 
     if (product.is_deleted) {
         if (updateStock) updateStock.style.display = 'none'; 
+        if (editButton) editButton.style.display = 'none'; // <-- HIDE EDIT BUTTON
         if (dangerZone) dangerZone.style.display = 'block'; 
         if (archivedMsg) archivedMsg.style.display = 'block'; 
         if (deleteForm) deleteForm.style.display = 'none'; 
     } else {
         if (updateStock) updateStock.style.display = permissionService.can('UPDATE_STOCK') ? 'block' : 'none';
+        if (editButton) editButton.style.display = permissionService.can('EDIT_ITEM') ? 'block' : 'none'; // <-- SHOW EDIT BUTTON
         if (archivedMsg) archivedMsg.style.display = 'none';
         if (deleteForm) deleteForm.style.display = 'block';
     }
@@ -328,12 +377,10 @@ const renderFullLedger = () => {
         snapshotFormContainer.querySelector('#snapshot-timestamp').value = new Date().toISOString().slice(0, 16);
     }
 
-    // --- *** THIS BLOCK IS NEWLY ADDED *** ---
     const verifyChainContainer = appContent.querySelector('#verify-chain-container');
     if (verifyChainContainer) {
         verifyChainContainer.style.display = permissionService.can('VERIFY_CHAIN') ? 'block' : 'none';
     }
-    // --- *** END NEW BLOCK *** ---
 
     const ledgerDisplay = appContent.querySelector('#full-ledger-display');
     ledgerDisplay.innerHTML = '';

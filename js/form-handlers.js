@@ -152,6 +152,53 @@ const handleMoveStock = async (form) => {
     }
 };
 
+// *** NEW FUNCTION ***
+const handleEditProduct = async (form) => {
+    if (!permissionService.can('EDIT_ITEM')) return showError("Access Denied.");
+
+    const itemSku = document.getElementById('update-product-id').value;
+    const newName = form.querySelector('#edit-product-name').value;
+    const newPrice = parseFloat(form.querySelector('#edit-product-price').value);
+    const newCategory = form.querySelector('#edit-product-category').value;
+
+    const product = inventory.get(itemSku);
+    
+    // Check if anything actually changed
+    if (product.productName === newName && product.price === newPrice && product.category === newCategory) {
+        return showSuccess("No changes to save.");
+    }
+
+    const transaction = {
+        txType: "ADMIN_EDIT_ITEM",
+        itemSku: itemSku,
+        oldName: product.productName,
+        oldPrice: product.price,
+        oldCategory: product.category,
+        newName: newName,
+        newPrice: newPrice,
+        newCategory: newCategory
+    };
+
+    // Run client-side pre-check (this updates the local 'product' object)
+    if (processTransaction(transaction, false, showError)) {
+        try {
+            // If pre-check passes, send to server
+            await addTransactionToChain(transaction);
+            showSuccess(`Product ${itemSku} updated! Updating system...`);
+            
+            // (SSE will handle the UI refresh, no need to do anything else)
+
+        } catch (error) {
+            showError(`Server error: ${error.message}`);
+            // Roll back the local state change and re-render
+            rebuildInventoryState(); 
+            renderProductDetail(itemSku);
+        }
+    }
+};
+// *** END NEW FUNCTION ***
+
+
 const handleClearDb = async (navigateTo) => {
     if (!permissionService.can('CLEAR_DB')) return showError("Access Denied.");
     if (confirm('Are you sure you want to clear the entire blockchain? This cannot be undone.')) {

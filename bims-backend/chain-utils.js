@@ -194,7 +194,12 @@ function rebuildStateAt(blockchainArray, targetTimestampISO) {
  * Note: It modifies the inventory map directly.
  */
 const processTransaction = (transaction, inventory, suppressErrors = false, showErrorCallback) => {
-    const { txType, itemSku, itemName, quantity, fromLocation, toLocation, location, price, category } = transaction;
+    // *** MODIFIED: Destructure new fields ***
+    const { 
+        txType, itemSku, itemName, quantity, 
+        fromLocation, toLocation, location, price, category,
+        newName, newPrice, newCategory
+    } = transaction;
 
     let product;
     if (txType !== 'CREATE_ITEM' && !inventory.has(itemSku)) {
@@ -254,6 +259,16 @@ const processTransaction = (transaction, inventory, suppressErrors = false, show
             product.locations.set(location, currentStockOutQty - quantity);
             return true;
         
+        // *** NEW CASE ***
+        case 'ADMIN_EDIT_ITEM':
+            if (product) {
+                product.productName = newName || product.productName;
+                // Use !== undefined to allow setting price to 0
+                product.price = newPrice !== undefined ? newPrice : product.price;
+                product.category = newCategory || product.category;
+            }
+            return true;
+
         // *** NEW CASE ***
         case 'DELETE_ITEM':
             if (product) { // product is already retrieved

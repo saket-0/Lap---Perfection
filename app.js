@@ -253,6 +253,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             await handleMoveStock(e.target);
         }
 
+        // *** MODIFIED: Changed ID to match new form ***
+        if (e.target.id === 'product-detail-form') {
+            await handleEditProduct(e.target);
+        }
+        // *** END MODIFICATION ***
+
         if (e.target.id === 'add-user-form') {
             await handleAddUser(e.target);
         }
@@ -326,6 +332,23 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
             return;
         }
+
+        // --- *** NEWLY ADDED LISTENERS *** ---
+        if (e.target.closest('#product-edit-toggle-button')) {
+            e.preventDefault();
+            toggleProductEditMode(true); // Show edit form
+            return;
+        }
+        if (e.target.closest('#product-edit-cancel-button')) {
+            e.preventDefault();
+            toggleProductEditMode(false); // Hide edit form
+            // Re-render to reset any dirty form fields
+            const productId = document.getElementById('update-product-id').value;
+            renderProductDetail(productId);
+            return;
+        }
+        // --- *** END NEW *** ---
+
 
         if (e.target.closest('#back-to-list-button')) {
             navigateTo('products');
@@ -514,9 +537,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 break;
             case 'detail':
                 // We are on a detail page. Does this block affect this product?
-                const detailIdEl = document.getElementById('detail-product-id');
+                const detailIdEl = document.getElementById('update-product-id'); // <-- Changed to hidden input
                 if (detailIdEl) {
-                    const currentProductId = detailIdEl.textContent;
+                    const currentProductId = detailIdEl.value;
                     if (newBlock.transaction.itemSku === currentProductId) {
                         // If item was deleted, go back to list
                         if (newBlock.transaction.txType === 'DELETE_ITEM') {

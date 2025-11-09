@@ -138,6 +138,9 @@ const permissionService = {
                 return true;
             case 'CREATE_ITEM':
                 return role === 'Admin';
+            // *** NEW PERMISSION ***
+            case 'EDIT_ITEM':
+                return role === 'Admin';
             case 'UPDATE_STOCK': // Add, Remove, Move
                 return role === 'Admin' || role === 'Inventory Manager';
             case 'VIEW_ITEM_HISTORY':
@@ -208,7 +211,12 @@ const addTransactionToChain = async (transaction) => {
  * 2. To run inside rebuildInventoryState() to build the local inventory map.
  */
 const processTransaction = (transaction, suppressErrors = false, showErrorCallback) => {
-    const { txType, itemSku, itemName, quantity, fromLocation, toLocation, location, price, category } = transaction;
+    // *** MODIFIED: Destructure new fields ***
+    const { 
+        txType, itemSku, itemName, quantity, 
+        fromLocation, toLocation, location, price, category,
+        newName, newPrice, newCategory
+    } = transaction;
 
     let product;
     if (txType !== 'CREATE_ITEM' && !inventory.has(itemSku)) {
@@ -268,6 +276,16 @@ const processTransaction = (transaction, suppressErrors = false, showErrorCallba
             product.locations.set(location, currentStockOutQty - quantity);
             return true;
         
+        // *** NEW CASE ***
+        case 'ADMIN_EDIT_ITEM':
+            if (product) {
+                product.productName = newName || product.productName;
+                // Use !== undefined to allow setting price to 0
+                product.price = newPrice !== undefined ? newPrice : product.price;
+                product.category = newCategory || product.category;
+            }
+            return true;
+
         // *** NEW CASE ***
         case 'DELETE_ITEM':
             if (product.is_deleted) {
