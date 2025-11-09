@@ -226,7 +226,15 @@ input[type=number] {
     outline: none;
     border-bottom-color: #4f46e5; /* indigo-600 */
 }
+
+/* --- *** NEW STYLE FOR SMALLER FILTER DROPDOWNS *** --- */
+.form-select-filter {
+    font-size: 0.875rem; /* 14px */
+    padding-top: 0.4rem;
+    padding-bottom: 0.4rem;
+}
 /* --- End Underline Styles --- */
+
 
 /* --- NEW: Styles for Hash Copy Button --- */
 .hash-container {
@@ -312,7 +320,7 @@ input[type=number] {
 }
 .dark #theme-toggle-button:hover {
     color: #a5b4fc; /* indigo-300 */
-    background-color: #334155; /* slate-700 */
+    background-color: #334155; /* slate-7G00 */
 }
 
 /* 4. Cards & Content (bg-white) */
@@ -401,7 +409,7 @@ input[type=number] {
 /* 7. Forms (FIXED: Underline inputs for Dark Mode) */
 .dark .form-input-underline, 
 .dark .form-select-underline {
-    border-bottom-color: #1e293b; /* slate-800 */
+    border-bottom-color: #334155; /* slate-700 */ /* <-- Darker border */
     color: #e2e8f0; /* slate-200 */
     background-color: transparent; /* <-- This is key */
     border-radius: 0; /* Ensure no radius */
@@ -434,11 +442,14 @@ input[type=number] {
     border-radius: 0.375rem; /* 6px */
     border: 1px solid #334155; /* slate-700 */
 }
-/* This selector is for the search bar, which IS boxed */
+
+/* This targets the (now removed) boxed search bar */
+/*
 .dark .pl-10 {
-    border-radius: 0.375rem; /* 6px */
-    border: 1px solid #334155; /* slate-700 */
+    border-radius: 0.375rem;
+    border: 1px solid #334155;
 }
+*/
 
 .dark .form-input-underline::placeholder,
 .dark input[type=text]:not(.form-input-underline)::placeholder,

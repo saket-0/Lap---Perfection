@@ -45,25 +45,29 @@
         <div class="flex flex-col md:flex-row justify-between md:items-center mb-4 gap-4">
             <h2 class="text-3xl font-semibold text-slate-800 flex-shrink-0">Product Inventory</h2>
             
-            <div class="flex flex-col sm:flex-row w-full gap-4">
-                <div class="relative w-full sm:w-1/2">
-                    <input type="text" id="product-search-input" placeholder="Search by SKU or Name..." class="w-full pl-10 pr-4 py-2 rounded-md border border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                    <i class="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                </div>
+            <div class="flex flex-col sm:flex-row w-full md:w-auto md:ml-auto gap-4 sm:items-end">
                 
-                <div class="w-full sm:w-1/4">
-                    <select id="product-category-filter" class="w-full form-select-underline !mt-0 !py-2">
+                <div class="w-full sm:w-auto">
+                    <label for="product-category-filter" class="block text-sm font-medium text-slate-700">Category</label>
+                    <select id="product-category-filter" class="w-full form-select-underline form-select-filter">
                         </select>
                 </div>
                 
-                <div class="w-full sm:w-1/4">
-                    <select id="product-location-filter" class="w-full form-select-underline !mt-0 !py-2">
+                <div class="w-full sm:w-auto">
+                    <label for="product-location-filter" class="block text-sm font-medium text-slate-700">Location</label>
+                    <select id="product-location-filter" class="w-full form-select-underline form-select-filter">
                         </select>
                 </div>
                 
-                <button id="product-filter-reset" title="Reset Filters" class="flex-shrink-0 bg-slate-600 text-white py-2 px-3 rounded-md shadow-sm hover:bg-slate-700 flex items-center justify-center gap-2">
+                <button id="product-filter-reset" title="Reset Filters" class="flex-shrink-0 text-slate-400 hover:text-slate-700 dark:text-slate-500 dark:hover:text-slate-300 p-2 pb-1 mr-4">
                     <i class="ph-bold ph-arrow-counter-clockwise text-lg"></i>
                 </button>
+
+                <div class="relative w-full sm:w-52">
+                    <label for="product-search-input" class="block text-sm font-medium text-slate-700">Search</label>
+                    <input type="text" id="product-search-input" placeholder="SKU or Name..." class="w-full form-input-underline !mt-0 !pl-10 pr-4">
+                    <i class="ph-bold ph-magnifying-glass absolute left-0 bottom-2.5 text-slate-400"></i>
+                </div>
             </div>
         </div>
         <div id="product-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
