@@ -85,7 +85,7 @@ const sessionMiddleware = session({
     saveUninitialized: false,
     proxy: true,
     cookie: {
-        maxAge: 5 * 60 * 1000, // 5 minutes
+        maxAge: 24 * 60 * 60 * 1000, // 5 minutes
         httpOnly: true,
         secure: false,
         sameSite: 'lax',

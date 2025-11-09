@@ -560,3 +560,12 @@ input[type=number] {
     background-color: #334155; /* slate-700 */
     color: #e2e8f0; /* slate-200 */
 }
+
+/* --- 13. NEW: Dark Mode for Edit Product Cancel Button --- */
+.dark #product-edit-cancel-button {
+    background-color: #334155; /* slate-700 */
+    color: #e2e8f0; /* slate-200 */
+}
+.dark #product-edit-cancel-button:hover {
+    background-color: #475569; /* slate-600 */
+}
