@@ -283,8 +283,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     appContent.addEventListener('input', (e) => {
+        // Product list search
         if (e.target.id === 'product-search-input') {
             renderProductList();
+        }
+
+        // *** NEW: Ledger Filters (Text and Date) ***
+        if (e.target.id === 'ledger-search-input' || e.target.id === 'ledger-date-from' || e.target.id === 'ledger-date-to') {
+            renderFullLedger();
         }
     });
 
@@ -294,7 +300,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (e.target.id === 'product-search-input') {
                 return;
             }
-            if (e.target.type === 'datetime-local') {
+            if (e.target.type === 'datetime-local' || e.target.type === 'date') { // <-- ADDED 'date'
                 return;
             }
             if (e.target.type === 'text' || 
@@ -428,6 +434,18 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             renderProductList(); // Re-render with reset values
         }
+        
+        // *** NEW: Handle LEDGER filter reset button click ***
+        if (e.target.closest('#ledger-filter-reset')) {
+            appContent.querySelector('#ledger-search-input').value = '';
+            appContent.querySelector('#ledger-user-filter').value = 'all';
+            appContent.querySelector('#ledger-category-filter').value = 'all';
+            appContent.querySelector('#ledger-location-filter').value = 'all';
+            appContent.querySelector('#ledger-date-from').value = '';
+            appContent.querySelector('#ledger-date-to').value = '';
+            
+            renderFullLedger(); // Re-render with reset values
+        }
         // *** END NEW ***
     });
 
@@ -457,6 +475,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         // *** NEW: Handle filter dropdown changes ***
         if (e.target.id === 'product-category-filter' || e.target.id === 'product-location-filter') {
             renderProductList();
+        }
+        
+        // *** NEW: Handle LEDGER filter dropdown changes ***
+        if (e.target.id === 'ledger-user-filter' || e.target.id === 'ledger-category-filter' || e.target.id === 'ledger-location-filter') {
+            renderFullLedger();
         }
         // *** END NEW ***
     });

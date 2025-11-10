@@ -369,3 +369,35 @@ const populateCategoryDropdown = (selectElement, includeAll = false) => {
         selectElement.value = 'all'; // Default to "all" for filters
     }
 };
+
+// *** NEW FUNCTION ***
+const populateUserDropdown = (selectElement, includeAll = false) => {
+    if (!selectElement) return;
+    const currentValue = selectElement.value;
+    selectElement.innerHTML = '';
+
+    if (includeAll) {
+        const allOption = document.createElement('option');
+        allOption.value = 'all';
+        allOption.textContent = 'All Users';
+        selectElement.appendChild(allOption);
+    }
+    
+    if (globalUsers.length === 0) {
+        selectElement.innerHTML = '<option value="">No users.</option>';
+        return;
+    }
+
+    globalUsers.forEach(user => {
+        const option = document.createElement('option');
+        option.value = user.id; // Use user ID as the value
+        option.textContent = user.name;
+        selectElement.appendChild(option);
+    });
+    
+    if (currentValue && (globalUsers.some(u => u.id == currentValue) || (includeAll && currentValue === 'all'))) {
+        selectElement.value = currentValue;
+    } else {
+        selectElement.value = 'all'; // Default to "all"
+    }
+};

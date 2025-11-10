@@ -6,7 +6,8 @@ let inventory = new Map(); // The "World State"
 let currentUser = null;
 let globalLocations = []; 
 let globalCategories = []; 
-let newProductCounter = 1; // <-- ADDED THIS LINE
+let globalUsers = []; // <-- ADDED THIS LINE
+let newProductCounter = 1; 
 
 // Define the base URL for your backend server
 // const API_BASE_URL = 'http://127.0.0.1:3000';
@@ -37,6 +38,19 @@ const fetchCategories = async () => {
         showError('Could not load dynamic categories.');
     }
 };
+
+// --- ADD THIS NEW FUNCTION ---
+const fetchUsers = async () => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/users`, { credentials: 'include' });
+        if (!response.ok) throw new Error('Failed to fetch users');
+        globalUsers = await response.json();
+    } catch (e) {
+        console.error(e);
+        globalUsers = [];
+        showError('Could not load users for filter.');
+    }
+};
 // --- END NEW FUNCTIONS ---
 
 
@@ -64,8 +78,9 @@ const authService = {
             }
             
             currentUser = await response.json(); // Server sends back the user object
-            await fetchLocations(); // <-- ADD
-            await fetchCategories(); // <-- ADD
+            await fetchLocations(); 
+            await fetchCategories(); 
+            await fetchUsers(); // <-- ADDED
             await showAppCallback(); // User is logged in, show the app
         
         } catch (error) {
@@ -93,8 +108,9 @@ const authService = {
             }
 
             currentUser = data.user; // Backend sends back the user object
-            await fetchLocations(); // <-- ADD
-            await fetchCategories(); // <-- ADD
+            await fetchLocations(); 
+            await fetchCategories(); 
+            await fetchUsers(); // <-- ADDED
             await showAppCallback(); // Show the app
 
         } catch (error) {
@@ -116,7 +132,8 @@ const authService = {
             console.error('Error logging out:', error);
         } finally {
             currentUser = null;
-            newProductCounter = 1; // <-- ADDED: Reset counter on logout
+            newProductCounter = 1; 
+            globalUsers = []; // <-- ADDED
             showLoginCallback();
         }
     }

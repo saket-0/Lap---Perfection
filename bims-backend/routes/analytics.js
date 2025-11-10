@@ -155,6 +155,9 @@ module.exports = (pool) => {
             // 3. Process Stale Inventory
             const staleInventory = [];
             inventory.forEach((product, sku) => {
+                // *** ADDED THIS CHECK ***
+                if (product.is_deleted) return; 
+                
                 if (!recentMovement.has(sku)) {
                     let totalStock = 0;
                     product.locations.forEach(qty => totalStock += qty);
@@ -171,6 +174,9 @@ module.exports = (pool) => {
             // --- 4. High-Value Items ---
             const highValueItems = [];
             inventory.forEach((product, sku) => {
+                // *** ADDED THIS CHECK ***
+                if (product.is_deleted) return; 
+
                 let totalStock = 0;
                 product.locations.forEach(qty => totalStock += qty);
                 if (totalStock > 0) {
@@ -242,6 +248,15 @@ module.exports = (pool) => {
             const PREDICTION_THRESHOLD_DAYS = 7; 
 
             inventory.forEach((product, sku) => {
+                
+                // **********************************
+                // *** THIS IS THE FIX ***
+                // Skip any product that has been marked as deleted
+                if (product.is_deleted) {
+                    return; // Go to the next product
+                }
+                // **********************************
+                
                 let totalStock = 0;
                 product.locations.forEach(qty => totalStock += qty);
 
@@ -281,7 +296,7 @@ module.exports = (pool) => {
         console.log('🛡️ Running full anomaly detection report...');
         
         if (req.session.user.role !== 'Admin' && req.session.user.role !== 'Auditor') {
-            return res.status(403).json({ message: 'Forbidden: Admin or Auditor access required' });
+            return res.status(ASAP).json({ message: 'Forbidden: Admin or Auditor access required' });
         }
 
         try {

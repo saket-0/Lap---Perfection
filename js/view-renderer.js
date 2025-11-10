@@ -366,11 +366,14 @@ const renderItemHistory = (productId) => {
     });
 };
 
+// ***
+// *** THIS FUNCTION IS HEAVILY MODIFIED ***
+// ***
 const renderFullLedger = () => {
-    // ... (This function is unchanged) ...
     const appContent = document.getElementById('app-content');
     if (!appContent) return;
 
+    // --- 1. POPULATE ADMIN WIDGETS ---
     const snapshotFormContainer = appContent.querySelector('#snapshot-form-container');
     if (snapshotFormContainer) {
         snapshotFormContainer.style.display = permissionService.can('VIEW_HISTORICAL_STATE') ? 'block' : 'none';
@@ -382,13 +385,94 @@ const renderFullLedger = () => {
         verifyChainContainer.style.display = permissionService.can('VERIFY_CHAIN') ? 'block' : 'none';
     }
 
+    // --- 2. POPULATE FILTER DROPDOWNS ---
+    populateUserDropdown(appContent.querySelector('#ledger-user-filter'), true);
+    populateCategoryDropdown(appContent.querySelector('#ledger-category-filter'), true);
+    populateLocationDropdown(appContent.querySelector('#ledger-location-filter'), true);
+
+    // --- 3. GET ALL FILTER VALUES ---
+    const searchTerm = (appContent.querySelector('#ledger-search-input')?.value || '').toLowerCase();
+    const userFilter = appContent.querySelector('#ledger-user-filter')?.value || 'all';
+    const categoryFilter = appContent.querySelector('#ledger-category-filter')?.value || 'all';
+    const locationFilter = appContent.querySelector('#ledger-location-filter')?.value || 'all';
+    const dateFrom = appContent.querySelector('#ledger-date-from')?.value;
+    const dateTo = appContent.querySelector('#ledger-date-to')?.value;
+    
+    // Create Date objects for comparison (adjusting for end of day)
+    const dateFromObj = dateFrom ? new Date(dateFrom) : null;
+    const dateToObj = dateTo ? new Date(dateTo) : null;
+    if (dateFromObj) dateFromObj.setHours(0, 0, 0, 0); // Start of the day
+    if (dateToObj) dateToObj.setHours(23, 59, 59, 999); // End of the day
+
+
+    // --- 4. FILTER THE BLOCKCHAIN ---
     const ledgerDisplay = appContent.querySelector('#full-ledger-display');
     ledgerDisplay.innerHTML = '';
     
-    [...blockchain].reverse().forEach(block => {
-        if (block.transaction.txType === 'GENESIS') return;
-        ledgerDisplay.appendChild(createLedgerBlockElement(block));
+    const filteredBlockchain = [...blockchain].reverse().filter(block => {
+        if (block.transaction.txType === 'GENESIS') return false;
+
+        const tx = block.transaction;
+        const blockTimestamp = new Date(block.timestamp);
+
+        // Filter 1: Date From
+        if (dateFromObj && blockTimestamp < dateFromObj) {
+            return false;
+        }
+        
+        // Filter 2: Date To
+        if (dateToObj && blockTimestamp > dateToObj) {
+            return false;
+        }
+
+        // Filter 3: User
+        if (userFilter !== 'all' && tx.adminUserId != userFilter) {
+            return false;
+        }
+
+        // Filter 4: Category
+        if (categoryFilter !== 'all') {
+            const txCategory = tx.category || tx.newCategory || tx.oldCategory;
+            if (!txCategory || txCategory !== categoryFilter) {
+                return false;
+            }
+        }
+        
+        // Filter 5: Location
+        if (locationFilter !== 'all') {
+            const txLocations = [tx.location, tx.fromLocation, tx.toLocation];
+            if (!txLocations.includes(locationFilter)) {
+                return false;
+            }
+        }
+        
+        // Filter 6: Text Search
+        if (searchTerm) {
+            // Create a searchable string from the transaction
+            let searchableText = `${tx.txType} ${tx.itemSku} ${tx.itemName} ${tx.adminUserName} ${tx.targetUser} ${tx.targetEmail}`;
+            searchableText = searchableText.toLowerCase();
+            if (!searchableText.includes(searchTerm)) {
+                return false;
+            }
+        }
+
+        return true; // If all filters pass, include the block
     });
+
+    // --- 5. RENDER THE FILTEreD BLOCKS ---
+    if (filteredBlockchain.length === 0) {
+        ledgerDisplay.innerHTML = '<p class="text-slate-500">No transactions match the current filters.</p>';
+    } else {
+        filteredBlockchain.forEach(block => {
+            ledgerDisplay.appendChild(createLedgerBlockElement(block));
+        });
+    }
+
+    // --- 6. UPDATE COUNT ---
+    const resultsCountEl = appContent.querySelector('#ledger-results-count');
+    if (resultsCountEl) {
+        resultsCountEl.textContent = `Showing ${filteredBlockchain.length} matching transactions (Newest block on top).`;
+    }
 };
 
 const renderAdminPanel = async () => {
