@@ -3,6 +3,29 @@
 import { blockchain, globalLocations, globalCategories, inventory } from '../../app-state.js';
 import { addChart } from './helpers.js';
 import { showError } from '../../ui/components/notifications.js';
+import { getChartColors, SEMANTIC_PALETTE, CATEGORICAL_PALETTE } from './colors.js';
+
+/**
+ * Generates a custom HTML legend for a chart.
+ * @param {Chart} chart - The Chart.js instance.
+ * @param {string} containerId - The ID of the div to inject the legend into.
+ */
+const generateHTMLLegend = (chart, containerId) => {
+    const legendContainer = document.getElementById(containerId);
+    if (!legendContainer) return;
+
+    const legendItems = chart.data.labels.map((label, index) => {
+        const color = chart.data.datasets[0].backgroundColor[index];
+        return `
+            <div class="legend-item">
+                <span class="legend-color-box" style="background-color: ${color}"></span>
+                <span class="legend-label">${label}</span>
+            </div>
+        `;
+    });
+
+    legendContainer.innerHTML = `<div class="chart-legend">${legendItems.join('')}</div>`;
+};
 
 // --- Main Analytics Page Renderer ---
 
@@ -27,12 +50,12 @@ export const renderAnalyticsPage = async () => {
         renderTopMoversList(kpis.topMovers);
         renderHighValueList(kpis.highValueItems);
         renderStaleInventoryList(kpis.staleInventory);
-        renderMostActiveUsers(kpis.mostActiveUsers); // <-- ADDED
+        renderMostActiveUsers(kpis.mostActiveUsers);
         
         // Render charts from KPI data
         renderTxMixLineChart(kpis.txMixLineData, kpis.dateLabels);
         renderLocationActivityChart(kpis.locationActivityData, kpis.dateLabels);
-        renderStockValueChart(kpis.stockValueLineData, kpis.dateLabels); // <-- ADDED
+        renderStockValueChart(kpis.stockValueLineData, kpis.dateLabels);
 
     } catch (error) {
         console.error("Failed to render analytics page:", error);
@@ -41,7 +64,7 @@ export const renderAnalyticsPage = async () => {
 };
 
 // --- KPI List Renderers ---
-
+// (These functions are unchanged)
 const renderTopMoversList = (topMovers) => {
     const container = document.getElementById('analytics-top-movers');
     if (!container) return;
@@ -73,14 +96,12 @@ const renderHighValueList = (highValueItems) => {
     }
     
     highValueItems.forEach(item => {
-        // vvv MODIFIED THIS BLOCK vvv
         container.innerHTML += `
             <div class="flex justify-between items-center clickable-stat-item" data-product-id="${item.sku}">
                 <span class="truncate" title="${item.name} (${item.sku})">${item.name}</span>
                 <span class="font-semibold text-indigo-600">₹${item.value.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             </div>
         `;
-        // ^^^ END MODIFICATION ^^^
     });
 };
 
@@ -104,7 +125,6 @@ const renderStaleInventoryList = (staleInventory) => {
     });
 };
 
-// vvv NEW KPI RENDERER vvv
 const renderMostActiveUsers = (activeUsers) => {
     const container = document.getElementById('analytics-active-users');
     if (!container) return;
@@ -124,11 +144,10 @@ const renderMostActiveUsers = (activeUsers) => {
         `;
     });
 };
-// ^^^ END NEW RENDERER ^^^
 
 
 // --- Chart Renderers (Local Data) ---
-
+// (These functions are unchanged)
 const renderTxVelocityChart = () => {
     const labels = [];
     const txInMap = new Map();
@@ -171,12 +190,12 @@ const renderTxVelocityChart = () => {
                 {
                     label: 'Stock In / Create',
                     data: txInData,
-                    backgroundColor: '#10b981',
+                    backgroundColor: SEMANTIC_PALETTE.stockIn,
                 },
                 {
                     label: 'Stock Out',
                     data: txOutData,
-                    backgroundColor: '#ef4444',
+                    backgroundColor: SEMANTIC_PALETTE.stockOut,
                 }
             ]
         },
@@ -212,21 +231,26 @@ const renderInventoryDistributionChart = () => {
     const ctx = document.getElementById('inventory-distribution-chart')?.getContext('2d');
     if (!ctx) return;
     
+    const labels = Array.from(locationValues.keys());
+    const data = Array.from(locationValues.values());
+    const colors = getChartColors(labels.length);
+
     const pieChart = new Chart(ctx, {
         type: 'pie',
         data: {
-            labels: Array.from(locationValues.keys()),
+            labels: labels,
             datasets: [{
                 label: 'Inventory Value',
-                data: Array.from(locationValues.values()),
-                backgroundColor: ['#3b82f6', '#f97316', '#10b981', '#ef4444', '#6b7280']
+                data: data,
+                backgroundColor: colors
             }]
         },
         options: {
             responsive: true,
             plugins: { 
-                legend: { position: 'top' },
-                // vvv MODIFIED TOOLTIP vvv
+                legend: { 
+                    display: false 
+                },
                 tooltip: {
                     callbacks: {
                         label: function(context) {
@@ -241,11 +265,12 @@ const renderInventoryDistributionChart = () => {
                         }
                     }
                 }
-                // ^^^ END MODIFICATION ^^^
             }
         }
     });
     addChart(pieChart);
+    
+    generateHTMLLegend(pieChart, 'inventory-distribution-legend');
 };
 
 const renderTxHeatmapChart = () => {
@@ -269,7 +294,7 @@ const renderTxHeatmapChart = () => {
             datasets: [{
                 label: 'Transactions by Hour (UTC)',
                 data: hourCounts,
-                backgroundColor: '#4f46e5',
+                backgroundColor: CATEGORICAL_PALETTE[0], // Use primary brand color
             }]
         },
         options: {
@@ -305,21 +330,26 @@ const renderInventoryCategoryChart = () => {
     const ctx = document.getElementById('inventory-category-chart')?.getContext('2d');
     if (!ctx) return;
 
+    const labels = Array.from(categoryValues.keys());
+    const data = Array.from(categoryValues.values());
+    const colors = getChartColors(labels.length);
+
     const categoryChart = new Chart(ctx, {
         type: 'doughnut',
         data: {
-            labels: Array.from(categoryValues.keys()),
+            labels: labels,
             datasets: [{
                 label: 'Inventory Value',
-                data: Array.from(categoryValues.values()),
-                backgroundColor: ['#4f46e5', '#3b82f6', '#10b981', '#f97316', '#ef4444', '#6b7280', '#fbbf24']
+                data: data,
+                backgroundColor: colors
             }]
         },
         options: {
             responsive: true,
             plugins: { 
-                legend: { position: 'top' },
-                // vvv MODIFIED TOOLTIP vvv
+                legend: { 
+                    display: false 
+                },
                 tooltip: {
                     callbacks: {
                         label: function(context) {
@@ -334,49 +364,51 @@ const renderInventoryCategoryChart = () => {
                         }
                     }
                 }
-                // ^^^ END MODIFICATION ^^^
             }
         }
     });
     addChart(categoryChart);
+
+    generateHTMLLegend(categoryChart, 'inventory-category-legend');
 };
 
 // --- Chart Renderers (KPI Data) ---
 
+// vvv MODIFIED: Added (data, labels) parameters vvv
 const renderTxMixLineChart = (data, labels) => {
     const ctx = document.getElementById('tx-mix-line-chart')?.getContext('2d');
-    if (!ctx || !data || !labels) return;
+    if (!ctx || !data || !labels) return; // Now this check works correctly
 
     const datasets = [
         {
             label: 'Create Item',
             data: data['CREATE_ITEM'] || [],
-            borderColor: '#10b981', // green-500
-            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+            borderColor: SEMANTIC_PALETTE.create,
+            backgroundColor: SEMANTIC_PALETTE.create + '1A', // 10% opacity
             fill: false,
             tension: 0.1
         },
         {
             label: 'Stock In',
             data: data['STOCK_IN'] || [],
-            borderColor: '#3b82f6', // blue-500
-            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+            borderColor: SEMANTIC_PALETTE.stockIn,
+            backgroundColor: SEMANTIC_PALETTE.stockIn + '1A',
             fill: false,
             tension: 0.1
         },
         {
             label: 'Stock Out',
             data: data['STOCK_OUT'] || [],
-            borderColor: '#ef4444', // red-500
-            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+            borderColor: SEMANTIC_PALETTE.stockOut,
+            backgroundColor: SEMANTIC_PALETTE.stockOut + '1A',
             fill: false,
             tension: 0.1
         },
         {
             label: 'Move',
             data: data['MOVE'] || [],
-            borderColor: '#f97316', // orange-500
-            backgroundColor: 'rgba(249, 115, 22, 0.1)',
+            borderColor: SEMANTIC_PALETTE.move,
+            backgroundColor: SEMANTIC_PALETTE.move + '1A',
             fill: false,
             tension: 0.1
         }
@@ -422,20 +454,21 @@ const renderTxMixLineChart = (data, labels) => {
     addChart(lineChart);
 };
 
+// vvv MODIFIED: Added (data, labels) parameters vvv
 const renderLocationActivityChart = (data, labels) => {
     const ctx = document.getElementById('location-activity-chart')?.getContext('2d');
-    if (!ctx || !data || !labels) return;
-
-    const colors = ['#4f46e5', '#f97316', '#10b981', '#ef4444', '#6b7280', '#fbbf24', '#8b5cf6'];
-    let colorIndex = 0;
+    if (!ctx || !data || !labels) return; // Now this check works correctly
 
     const datasets = [];
+    const colors = getChartColors(Object.keys(data).length);
+    let colorIndex = 0;
+
     for (const locationName in data) {
         datasets.push({
             label: locationName,
             data: data[locationName],
-            borderColor: colors[colorIndex % colors.length],
-            backgroundColor: colors[colorIndex % colors.length] + '1A', // 10% opacity
+            borderColor: colors[colorIndex],
+            backgroundColor: colors[colorIndex] + '1A', // 10% opacity
             fill: false,
             tension: 0.1
         });
@@ -455,7 +488,7 @@ const renderLocationActivityChart = (data, labels) => {
                 y: { 
                     beginAtZero: true,
                     ticks: {
-                        stepSize: 1 // This chart is still by COUNT, so this is correct
+                        stepSize: 1 
                     }
                 } 
             }
@@ -464,25 +497,25 @@ const renderLocationActivityChart = (data, labels) => {
     addChart(lineChart);
 };
 
-// vvv NEW CHART RENDERER vvv
+// vvv MODIFIED: Added (data, labels) parameters vvv
 const renderStockValueChart = (data, labels) => {
     const ctx = document.getElementById('stock-value-chart')?.getContext('2d');
-    if (!ctx || !data || !labels) return;
+    if (!ctx || !data || !labels) return; // Now this check works correctly
 
     const datasets = [
         {
             label: 'Value In (Create/Stock-In)',
             data: data['STOCK_IN'] || [],
-            borderColor: '#10b981', // green-500
-            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+            borderColor: SEMANTIC_PALETTE.stockIn,
+            backgroundColor: SEMANTIC_PALETTE.stockIn + '1A',
             fill: true,
             tension: 0.1
         },
         {
             label: 'Value Out (Stock-Out)',
             data: data['STOCK_OUT'] || [],
-            borderColor: '#ef4444', // red-500
-            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+            borderColor: SEMANTIC_PALETTE.stockOut,
+            backgroundColor: SEMANTIC_PALETTE.stockOut + '1A',
             fill: true,
             tension: 0.1
         }
@@ -506,9 +539,7 @@ const renderStockValueChart = (data, labels) => {
                                 label += ': ';
                             }
                             if (context.parsed.y !== null) {
-                                // vvv MODIFIED THIS LINE vvv
                                 label += `₹${context.parsed.y.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-                                // ^^^ END MODIFICATION ^^^
                             }
                             return label;
                         }
@@ -521,9 +552,7 @@ const renderStockValueChart = (data, labels) => {
                     ticks: {
                         // Format as currency
                         callback: function(value, index, values) {
-                            // vvv MODIFIED THIS LINE vvv
                             return '₹' + value.toLocaleString('en-IN');
-                            // ^^^ END MODIFICATION ^^^
                         }
                     }
                 } 
@@ -532,4 +561,3 @@ const renderStockValueChart = (data, labels) => {
     });
     addChart(valueChart);
 };
-// ^^^ END NEW RENDERER ^^^

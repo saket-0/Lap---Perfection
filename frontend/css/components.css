@@ -152,3 +152,30 @@
     white-space: pre-line; /* Renders \n as line breaks */
 }
 /* --- END: Confirm Modal Styles --- */
+
+/* --- NEW: HTML Legend Styles --- */
+.chart-legend {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem; /* 8px */
+    margin-top: 1rem; /* 16px */
+}
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem; /* 8px */
+}
+.legend-color-box {
+    width: 1rem; /* 16px */
+    height: 1rem; /* 16px */
+    border-radius: 0.25rem; /* 4px */
+    flex-shrink: 0;
+}
+.legend-label {
+    font-size: 0.875rem; /* 14px */
+    color: #475569; /* slate-600 */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+/* --- END: HTML Legend Styles --- */

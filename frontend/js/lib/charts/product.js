@@ -1,6 +1,9 @@
 // frontend/js/lib/charts/product.js
 import { blockchain } from '../../app-state.js';
 import { addChart } from './helpers.js';
+// vvv NEW IMPORT vvv
+import { CATEGORICAL_PALETTE } from './colors.js';
+// ^^^ END IMPORT ^^^
 
 export const renderItemStockChart = (productId) => {
     const itemHistory = blockchain
@@ -36,10 +39,13 @@ export const renderItemStockChart = (productId) => {
     const ctx = document.getElementById('item-stock-chart')?.getContext('2d');
     if (!ctx) return;
     
+    // vvv MODIFIED vvv
     const currentTheme = localStorage.getItem('bims_theme') || 'light';
+    const primaryColor = CATEGORICAL_PALETTE[0]; // Get main brand color
     const chartBackgroundColor = currentTheme === 'light' 
-        ? '#eef2ff' // Light indigo
+        ? primaryColor + '1A' // 10% opacity
         : 'rgba(79, 70, 229, 0.2)'; // Dark indigo (transparent)
+    // ^^^ END MODIFICATION ^^^
 
     const stockChart = new Chart(ctx, {
         type: 'line',
@@ -48,14 +54,16 @@ export const renderItemStockChart = (productId) => {
             datasets: [{
                 label: 'Total Stock',
                 data: dataPoints,
-                borderColor: '#4f46e5',
+                // vvv MODIFIED vvv
+                borderColor: primaryColor,
                 backgroundColor: chartBackgroundColor,
                 fill: true,
                 tension: 0.1,
                 pointRadius: 3,
                 pointHoverRadius: 6,
                 pointBackgroundColor: '#ffffff',
-                pointBorderColor: '#4f46e5',
+                pointBorderColor: primaryColor,
+                // ^^^ END MODIFICATION ^^^
                 pointBorderWidth: 2,
                 pointHoverBackgroundColor: '#ffffff',
                 pointHoverBorderColor: '#312e81'
