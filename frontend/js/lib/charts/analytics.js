@@ -1,95 +1,20 @@
-// Lap/js/chart-renderer.js
+// frontend/js/lib/charts/analytics.js
+// import { API_BASE_URL } from '../../../config.js';
+import { blockchain, globalLocations, globalCategories, inventory } from '../../app-state.js';
+import { addChart } from './helpers.js';
+import { showError } from '../../ui/components/notifications.js';
 
-// Keep track of charts to destroy them on navigation
-let currentCharts = [];
+// --- Main Analytics Page Renderer ---
 
-const destroyCurrentCharts = () => {
-    currentCharts.forEach(chart => chart.destroy());
-    currentCharts = [];
-};
-
-const renderItemStockChart = (productId) => {
-    const itemHistory = blockchain
-        .filter(block => block.transaction.itemSku === productId)
-        .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp)); // Sort chronological
-
-    if (itemHistory.length === 0) return;
-
-    const labels = [];
-    const dataPoints = [];
-    let currentStock = 0;
-
-    itemHistory.forEach(block => {
-        const tx = block.transaction;
-        switch (tx.txType) {
-            case 'CREATE_ITEM':
-                currentStock += tx.quantity;
-                break;
-            case 'STOCK_IN':
-                currentStock += tx.quantity;
-                break;
-            case 'STOCK_OUT':
-                currentStock -= tx.quantity;
-                break;
-            case 'MOVE':
-                break;
-        }
-        labels.push(new Date(block.timestamp).toLocaleString());
-        dataPoints.push(currentStock);
-    });
-
-    const ctx = document.getElementById('item-stock-chart')?.getContext('2d');
-    if (!ctx) return;
-    
-    // *** THEME-AWARE COLOR FIX ***
-    const currentTheme = localStorage.getItem('bims_theme') || 'light';
-    const chartBackgroundColor = currentTheme === 'light' 
-        ? '#eef2ff' // Light indigo (original)
-        : 'rgba(79, 70, 229, 0.2)'; // Dark indigo (transparent)
-
-    const stockChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Total Stock',
-                data: dataPoints,
-                borderColor: '#4f46e5',
-                backgroundColor: chartBackgroundColor, // Use theme-aware color
-                fill: true,
-                tension: 0.1,
-                pointRadius: 3,
-                pointHoverRadius: 6,
-                
-                // --- THIS IS THE FIX ---
-                pointBackgroundColor: '#ffffff', // White fill for the dots
-                pointBorderColor: '#4f46e5',     // Blue border for the dots
-                pointBorderWidth: 2,             // Make the border visible
-                pointHoverBackgroundColor: '#ffffff',
-                pointHoverBorderColor: '#312e81'
-                // --- END FIX ---
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: { legend: { display: false } },
-            scales: { y: { beginAtZero: true } }
-        }
-    });
-    currentCharts.push(stockChart);
-};
-
-
-// *** MODIFIED: This function now calls the new charts ***
-const renderAnalyticsPage = async () => {
+export const renderAnalyticsPage = async () => {
     try {
-        // Render the charts that use local data
+        // Render charts that use local data
         renderTxVelocityChart();
         renderTxHeatmapChart();
         renderInventoryDistributionChart(); 
         renderInventoryCategoryChart(); 
 
-        // Fetch the new consolidated KPIs
+        // Fetch consolidated KPIs
         const response = await fetch(`${API_BASE_URL}/api/analytics/kpis`, {
             credentials: 'include'
         });
@@ -98,17 +23,14 @@ const renderAnalyticsPage = async () => {
         }
         const kpis = await response.json();
 
-        // Render the new charts/lists
-        // renderTransactionMixChart(kpis.txMix); // <-- REMOVED
+        // Render KPI lists
         renderTopMoversList(kpis.topMovers);
         renderHighValueList(kpis.highValueItems);
         renderStaleInventoryList(kpis.staleInventory);
         
-        // --- ADDED NEW CHART RENDERERS ---
+        // Render charts from KPI data
         renderTxMixLineChart(kpis.txMixLineData, kpis.dateLabels);
         renderLocationActivityChart(kpis.locationActivityData, kpis.dateLabels);
-        // --- END ADDED ---
-
 
     } catch (error) {
         console.error("Failed to render analytics page:", error);
@@ -116,6 +38,70 @@ const renderAnalyticsPage = async () => {
     }
 };
 
+// --- KPI List Renderers ---
+
+const renderTopMoversList = (topMovers) => {
+    const container = document.getElementById('analytics-top-movers');
+    if (!container) return;
+    container.innerHTML = '';
+    
+    if (topMovers.length === 0) {
+        container.innerHTML = '<p class="text-slate-500">No stock-out transactions in 30 days.</p>';
+        return;
+    }
+    
+    topMovers.forEach(item => {
+        container.innerHTML += `
+            <div class="flex justify-between items-center clickable-stat-item" data-product-id="${item.sku}">
+                <span class="truncate" title="${item.name} (${item.sku})">${item.name}</span>
+                <span class="font-semibold text-indigo-600">${item.quantity} units</span>
+            </div>
+        `;
+    });
+};
+
+const renderHighValueList = (highValueItems) => {
+    const container = document.getElementById('analytics-high-value');
+    if (!container) return;
+    container.innerHTML = '';
+    
+    if (highValueItems.length === 0) {
+        container.innerHTML = '<p class="text-slate-500">No items in stock.</p>';
+        return;
+    }
+    
+    highValueItems.forEach(item => {
+        container.innerHTML += `
+            <div class="flex justify-between items-center clickable-stat-item" data-product-id="${item.sku}">
+                <span class="truncate" title="${item.name} (${item.sku})">${item.name}</span>
+                <span class="font-semibold text-indigo-600">₹${item.value.toFixed(2)}</span>
+            </div>
+        `;
+    });
+};
+
+const renderStaleInventoryList = (staleInventory) => {
+    const container = document.getElementById('analytics-stale-inventory');
+    if (!container) return;
+    container.innerHTML = '';
+    
+    if (staleInventory.length === 0) {
+        container.innerHTML = '<p class="text-slate-500">All items are moving!</p>';
+        return;
+    }
+    
+    staleInventory.forEach(item => {
+        container.innerHTML += `
+            <div class="flex justify-between items-center clickable-stat-item" data-product-id="${item.sku}">
+                <span class="truncate" title="${item.name} (${item.sku})">${item.name}</span>
+                <span class="font-semibold text-red-600">${item.stock} units</span>
+            </div>
+        `;
+    });
+};
+
+
+// --- Chart Renderers (Local Data) ---
 
 const renderTxVelocityChart = () => {
     const labels = [];
@@ -176,14 +162,12 @@ const renderTxVelocityChart = () => {
             }
         }
     });
-    currentCharts.push(velocityChart);
+    addChart(velocityChart);
 };
 
-// *** ADDED BACK: Renders Inventory Value by Location ***
 const renderInventoryDistributionChart = () => {
     const locationValues = new Map();
     
-    // Use globalLocations to get the source of truth for locations
     globalLocations.forEach(loc => {
         if (!loc.is_archived) {
             locationValues.set(loc.name, 0);
@@ -217,7 +201,7 @@ const renderInventoryDistributionChart = () => {
             plugins: { legend: { position: 'top' } }
         }
     });
-    currentCharts.push(pieChart);
+    addChart(pieChart);
 };
 
 const renderTxHeatmapChart = () => {
@@ -250,14 +234,12 @@ const renderTxHeatmapChart = () => {
             scales: { y: { beginAtZero: true } }
         }
     });
-    currentCharts.push(heatmapChart);
+    addChart(heatmapChart);
 };
 
-// *** ADDED BACK: Renders Inventory Value by Category ***
 const renderInventoryCategoryChart = () => {
     const categoryValues = new Map();
 
-    // Use globalCategories to get the source of truth
     globalCategories.forEach(cat => {
         if (!cat.is_archived) {
             categoryValues.set(cat.name, 0);
@@ -271,7 +253,6 @@ const renderInventoryCategoryChart = () => {
         product.locations.forEach(qty => totalStock += qty);
         
         const currentCategoryValue = categoryValues.get(category) || 0;
-        // Only add if the category is known and not archived
         if (categoryValues.has(category)) {
              categoryValues.set(category, currentCategoryValue + (totalStock * price));
         }
@@ -295,79 +276,10 @@ const renderInventoryCategoryChart = () => {
             plugins: { legend: { position: 'top' } }
         }
     });
-    currentCharts.push(categoryChart);
+    addChart(categoryChart);
 };
 
-// --- 'renderTransactionMixChart' FUNCTION REMOVED ---
-
-// --- New KPI Functions from last step ---
-
-// *** MODIFIED: Added class and data-product-id ***
-const renderTopMoversList = (topMovers) => {
-    const container = document.getElementById('analytics-top-movers');
-    if (!container) return;
-    container.innerHTML = '';
-    
-    if (topMovers.length === 0) {
-        container.innerHTML = '<p class="text-slate-500">No stock-out transactions in 30 days.</p>';
-        return;
-    }
-    
-    topMovers.forEach(item => {
-        container.innerHTML += `
-            <div class="flex justify-between items-center clickable-stat-item" data-product-id="${item.sku}">
-                <span class="truncate" title="${item.name} (${item.sku})">${item.name}</span>
-                <span class="font-semibold text-indigo-600">${item.quantity} units</span>
-            </div>
-        `;
-    });
-};
-
-// *** MODIFIED: Added class and data-product-id ***
-const renderHighValueList = (highValueItems) => {
-    const container = document.getElementById('analytics-high-value');
-    if (!container) return;
-    container.innerHTML = '';
-    
-    if (highValueItems.length === 0) {
-        container.innerHTML = '<p class="text-slate-500">No items in stock.</p>';
-        return;
-    }
-    
-    highValueItems.forEach(item => {
-        container.innerHTML += `
-            <div class="flex justify-between items-center clickable-stat-item" data-product-id="${item.sku}">
-                <span class="truncate" title="${item.name} (${item.sku})">${item.name}</span>
-                <span class="font-semibold text-indigo-600">₹${item.value.toFixed(2)}</span>
-            </div>
-        `;
-    });
-};
-
-// *** MODIFIED: Added class and data-product-id ***
-const renderStaleInventoryList = (staleInventory) => {
-    const container = document.getElementById('analytics-stale-inventory');
-    if (!container) return;
-    container.innerHTML = '';
-    
-    if (staleInventory.length === 0) {
-        container.innerHTML = '<p class="text-slate-500">All items are moving!</p>';
-        return;
-    }
-    
-    staleInventory.forEach(item => {
-        container.innerHTML += `
-            <div class="flex justify-between items-center clickable-stat-item" data-product-id="${item.sku}">
-                <span class="truncate" title="${item.name} (${item.sku})">${item.name}</span>
-                <span class="font-semibold text-red-600">${item.stock} units</span>
-            </div>
-        `;
-    });
-};
-
-// *** "renderProfileLocationChart" FUNCTION REMOVED ***
-
-// --- ADDED NEW CHART RENDERER FUNCTIONS ---
+// --- Chart Renderers (KPI Data) ---
 
 const renderTxMixLineChart = (data, labels) => {
     const ctx = document.getElementById('tx-mix-line-chart')?.getContext('2d');
@@ -427,14 +339,13 @@ const renderTxMixLineChart = (data, labels) => {
             }
         }
     });
-    currentCharts.push(lineChart);
+    addChart(lineChart);
 };
 
 const renderLocationActivityChart = (data, labels) => {
     const ctx = document.getElementById('location-activity-chart')?.getContext('2d');
     if (!ctx || !data || !labels) return;
 
-    // Use theme-aware colors
     const colors = ['#4f46e5', '#f97316', '#10b981', '#ef4444', '#6b7280', '#fbbf24', '#8b5cf6'];
     let colorIndex = 0;
 
@@ -470,5 +381,5 @@ const renderLocationActivityChart = (data, labels) => {
             }
         }
     });
-    currentCharts.push(lineChart);
+    addChart(lineChart);
 };

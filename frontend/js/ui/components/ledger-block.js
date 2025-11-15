@@ -1,70 +1,20 @@
-// Lap/js/ui-utils.js
+// frontend/js/ui/components/ledger-block.js
 
-// --- Toast/Notification Functions ---
-let errorTimer;
-const showError = (message, suppress = false) => {
-    console.error(message);
-    if (suppress) return;
-    
-    const errorMessage = document.getElementById('error-message');
-    const errorToast = document.getElementById('error-toast');
-    const successToast = document.getElementById('success-toast'); // Get success toast
-    if (!errorMessage || !errorToast || !successToast) return;
-
-    // *** FIX: Clear and hide success toast ***
-    successToast.classList.remove('toast-show');
-    clearTimeout(successTimer);
-    // *** END FIX ***
-
-    errorMessage.textContent = message;
-    errorToast.classList.add('toast-show');
-    clearTimeout(errorTimer);
-    errorTimer = setTimeout(() => errorToast.classList.remove('toast-show'), 3000);
-};
-
-let successTimer;
-const showSuccess = (message) => {
-    console.log(message);
-    
-    const successMessage = document.getElementById('success-message');
-    const successToast = document.getElementById('success-toast');
-    const errorToast = document.getElementById('error-toast'); // Get error toast
-    if (!successMessage || !successToast || !errorToast) return;
-
-    // *** FIX: Clear and hide error toast ***
-    errorToast.classList.remove('toast-show');
-    clearTimeout(errorTimer);
-    // *** END FIX ***
-
-    successMessage.textContent = message;
-    successToast.classList.add('toast-show');
-    clearTimeout(successTimer);
-    successTimer = setTimeout(() => successToast.classList.remove('toast-show'), 3000);
-};
-
-// --- UI Element Creators ---
-
-const createLedgerBlockElement = (block) => {
+export const createLedgerBlockElement = (block) => {
     const blockElement = document.createElement('div');
     blockElement.className = 'border border-slate-200 rounded-lg p-3 bg-white shadow-sm';
     
-    // *** MODIFIED: Destructure new fields ***
     const { 
         txType, itemSku, itemName, quantity, 
         fromLocation, toLocation, location, userName, 
         employeeId, beforeQuantity, afterQuantity, 
         price, category,
-        // Admin fields
         adminUserName, adminEmployeeId,
         targetUser, targetEmail, targetRole, oldEmail,
-        // User profile fields
         oldName,
-        // Location/Category fields
         targetId, targetName, newName,
-        // *** NEW EDIT ITEM FIELDS ***
         oldPrice, oldCategory, newPrice, newCategory
     } = block.transaction;
-    // *** END MODIFICATION ***
     
     let transactionHtml = '';
     let detailsHtml = '';
@@ -95,7 +45,6 @@ const createLedgerBlockElement = (block) => {
                            ${actorHtml}`;
             break;
         
-        // *** NEW CASE ***
         case 'ADMIN_EDIT_ITEM':
             transactionHtml = `<span class="font-semibold text-purple-600">ADMIN EDIT ITEM</span> for <strong>${itemSku}</strong>`;
             if (newName !== oldName) {
@@ -110,7 +59,6 @@ const createLedgerBlockElement = (block) => {
             detailsHtml += actorHtml;
             break;
         
-        // *** ADMIN CASES ***
         case 'ADMIN_CREATE_USER':
             transactionHtml = `<span class="font-semibold text-purple-600">ADMIN CREATE USER</span>`;
             detailsHtml = `<li>Target: <strong>${targetUser}</strong> (${targetEmail})</li>
@@ -134,7 +82,6 @@ const createLedgerBlockElement = (block) => {
                            ${actorHtml}`;
             break;
         
-        // *** NEW USER PROFILE CASES ***
         case 'USER_UPDATE_PROFILE':
             transactionHtml = `<span class="font-semibold text-cyan-600">USER UPDATE PROFILE</span>`;
             detailsHtml = `<li>User: <strong>${targetUser}</strong></li>
@@ -154,20 +101,17 @@ const createLedgerBlockElement = (block) => {
             detailsHtml = `${actorHtml}`;
             break;
 
-        // *** NEWLY ADDED CASES ***
         case 'ADMIN_ADD_LOCATION':
             transactionHtml = `<span class="font-semibold text-purple-600">ADMIN ADD LOCATION</span>`;
             detailsHtml = `<li>Location: <strong>${targetName}</strong> (ID: ${targetId})</li>
                            ${actorHtml}`;
             break;
         
-        // --- NEW CASE ---
         case 'ADMIN_RESTORE_LOCATION':
             transactionHtml = `<span class="font-semibold text-green-600">ADMIN RESTORE LOCATION</span>`;
             detailsHtml = `<li>Location: <strong>${targetName}</strong> (ID: ${targetId})</li>
                            ${actorHtml}`;
             break;
-        // --- END NEW CASE ---
 
         case 'ADMIN_RENAME_LOCATION':
             transactionHtml = `<span class="font-semibold text-purple-600">ADMIN RENAME LOCATION</span>`;
@@ -187,13 +131,11 @@ const createLedgerBlockElement = (block) => {
                            ${actorHtml}`;
             break;
 
-        // --- NEW CASE ---
         case 'ADMIN_RESTORE_CATEGORY':
             transactionHtml = `<span class="font-semibold text-green-600">ADMIN RESTORE CATEGORY</span>`;
             detailsHtml = `<li>Category: <strong>${targetName}</strong> (ID: ${targetId})</li>
                            ${actorHtml}`;
             break;
-        // --- END NEW CASE ---
 
         case 'ADMIN_RENAME_CATEGORY':
             transactionHtml = `<span class="font-semibold text-purple-600">ADMIN RENAME CATEGORY</span>`;
@@ -207,13 +149,11 @@ const createLedgerBlockElement = (block) => {
             detailsHtml = `<li>Category: <strong>${targetName}</strong> (ID: ${targetId})</li>
                            ${actorHtml}`;
             break;
-        // *** END NEW CASES ***
 
         default:
              transactionHtml = `Unknown transaction: ${txType}`;
     }
 
-    // --- THIS IS THE MODIFIED SECTION ---
     blockElement.innerHTML = `
         <div class="flex justify-between items-center mb-2">
             <h4 class="font-semibold text-sm text-indigo-700">Block #${block.index}</h4>
@@ -240,182 +180,6 @@ const createLedgerBlockElement = (block) => {
             </div>
         </div>
     `;
-    // --- END MODIFIED SECTION ---
     
     return blockElement;
-};
-
-
-// --- Data Populate Functions ---
-
-// *** NEW FUNCTION ***
-/**
- * Generates a unique SKU that is not already present in the inventory.
- * @returns {string} A unique SKU (e.g., "SKU-1234")
- */
-const generateUniqueSku = () => {
-    let newSku = '';
-    let attempts = 0;
-    const maxAttempts = 100; // Failsafe
-
-    do {
-        // Generate a 4-digit random number
-        const randomId = Math.floor(1000 + Math.random() * 9000);
-        newSku = `SKU-${randomId}`;
-        attempts++;
-        if (attempts > maxAttempts) {
-            // Failsafe in case of a very crowded inventory
-            newSku = `SKU-${Date.now()}`;
-            break;
-        }
-    } while (inventory.has(newSku)); // Check against the global inventory map
-
-    return newSku;
-};
-
-
-const populateLoginDropdown = async () => {
-    const loginEmailSelect = document.getElementById('login-email-select');
-    const loginEmailInput = document.getElementById('login-email-input');
-    if (!loginEmailSelect || !loginEmailInput) return;
-
-    try {
-        const response = await fetch(`${API_BASE_URL}/api/users`);
-        if (!response.ok) {
-            const err = await response.json();
-            throw new Error(err.message || 'Failed to fetch users');
-        }
-        
-        const users = await response.json();
-        loginEmailSelect.innerHTML = '';
-        
-        if (users.length === 0) {
-             loginEmailSelect.innerHTML = '<option value="">No users</option>';
-             loginEmailInput.value = '';
-             return;
-        }
-
-        users.forEach((user, index) => {
-            const option = document.createElement('option');
-            option.value = user.email;
-            option.textContent = `${user.name} (${user.role})`;
-            loginEmailSelect.appendChild(option);
-
-            if (index === 0) {
-                loginEmailInput.value = user.email;
-            }
-        });
-    
-    } catch (error) {
-        console.error(error.message);
-        showError(error.message, true); // Suppress toast on login screen
-        loginEmailSelect.innerHTML = '<option value="">Could not load users</option>';
-        loginEmailInput.value = '';
-        loginEmailInput.placeholder = 'Error loading users';
-    }
-};
-
-
-// *** MODIFIED: Added 'includeAll' parameter ***
-const populateLocationDropdown = (selectElement, includeAll = false) => {
-    if (!selectElement) return;
-    const currentValue = selectElement.value;
-    selectElement.innerHTML = '';
-    
-    // *** NEW: Add "All" option if requested ***
-    if (includeAll) {
-        const allOption = document.createElement('option');
-        allOption.value = 'all';
-        allOption.textContent = 'All Locations';
-        selectElement.appendChild(allOption);
-    }
-    
-    const locationsToShow = globalLocations.filter(loc => !loc.is_archived);
-    if (locationsToShow.length === 0 && !includeAll) {
-        selectElement.innerHTML = '<option value="">No locations.</option>';
-        return;
-    }
-
-    locationsToShow.forEach(loc => {
-        const option = document.createElement('option');
-        option.value = loc.name;
-        option.textContent = loc.name;
-        selectElement.appendChild(option);
-    });
-    
-    if (currentValue && (locationsToShow.some(l => l.name === currentValue) || (includeAll && currentValue === 'all'))) {
-        selectElement.value = currentValue;
-    } else if (!includeAll) {
-        selectElement.value = locationsToShow[0]?.name || '';
-    } else {
-        selectElement.value = 'all'; // Default to "all" for filters
-    }
-};
-
-// *** MODIFIED: Added 'includeAll' parameter ***
-const populateCategoryDropdown = (selectElement, includeAll = false) => {
-    if (!selectElement) return;
-    const currentValue = selectElement.value;
-    selectElement.innerHTML = '';
-
-    // *** NEW: Add "All" option if requested ***
-    if (includeAll) {
-        const allOption = document.createElement('option');
-        allOption.value = 'all';
-        allOption.textContent = 'All Categories';
-        selectElement.appendChild(allOption);
-    }
-    
-    const categoriesToShow = globalCategories.filter(cat => !cat.is_archived);
-    if (categoriesToShow.length === 0 && !includeAll) {
-        selectElement.innerHTML = '<option value="">No categories.</option>';
-        return;
-    }
-
-    categoriesToShow.forEach(cat => {
-        const option = document.createElement('option');
-        option.value = cat.name;
-        option.textContent = cat.name;
-        selectElement.appendChild(option);
-    });
-    
-    if (currentValue && (categoriesToShow.some(c => c.name === currentValue) || (includeAll && currentValue === 'all'))) {
-        selectElement.value = currentValue;
-    } else if (!includeAll) {
-        selectElement.value = categoriesToShow[0]?.name || '';
-    } else {
-        selectElement.value = 'all'; // Default to "all" for filters
-    }
-};
-
-// *** NEW FUNCTION ***
-const populateUserDropdown = (selectElement, includeAll = false) => {
-    if (!selectElement) return;
-    const currentValue = selectElement.value;
-    selectElement.innerHTML = '';
-
-    if (includeAll) {
-        const allOption = document.createElement('option');
-        allOption.value = 'all';
-        allOption.textContent = 'All Users';
-        selectElement.appendChild(allOption);
-    }
-    
-    if (globalUsers.length === 0) {
-        selectElement.innerHTML = '<option value="">No users.</option>';
-        return;
-    }
-
-    globalUsers.forEach(user => {
-        const option = document.createElement('option');
-        option.value = user.id; // Use user ID as the value
-        option.textContent = user.name;
-        selectElement.appendChild(option);
-    });
-    
-    if (currentValue && (globalUsers.some(u => u.id == currentValue) || (includeAll && currentValue === 'all'))) {
-        selectElement.value = currentValue;
-    } else {
-        selectElement.value = 'all'; // Default to "all"
-    }
 };

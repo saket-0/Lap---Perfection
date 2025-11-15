@@ -1,7 +1,8 @@
-// Lap/js/anomaly-renderer.js
+// frontend/js/ui/anomaly-renderer.js
+import { createLedgerBlockElement } from './components/ledger-block.js';
 
 // Main function to render the dedicated anomaly page
-const renderAnomalyPage = async () => {
+export const renderAnomalyPage = async () => {
     const appContent = document.getElementById('app-content');
     if (!appContent) return;
 
@@ -9,7 +10,6 @@ const renderAnomalyPage = async () => {
     const kpiTotal = appContent.querySelector('#kpi-total-anomalies');
     const kpiPercent = appContent.querySelector('#kpi-percent-flagged');
     
-    // Get the new containers
     const gridContainer = appContent.querySelector('#anomaly-grid-container');
     const fullWidthContainer = appContent.querySelector('#anomaly-fullwidth-container');
     const reportWrapper = appContent.querySelector('#anomaly-report-wrapper');
@@ -18,7 +18,6 @@ const renderAnomalyPage = async () => {
     kpiPercent.textContent = '...';
     gridContainer.innerHTML = '<p class="text-sm text-slate-500">Scanning blockchain for all anomalies...</p>';
     fullWidthContainer.innerHTML = '';
-
 
     try {
         const response = await fetch(`${API_BASE_URL}/api/analytics/anomalies-report`, {
@@ -47,12 +46,9 @@ const renderAnomalyPage = async () => {
             return;
         }
 
-        // Render the lists into their specific containers
-        // --- MODIFIED ICON NAMES ---
         renderAnomalyCategory(gridContainer, 'Business Logic Anomalies', 'ph-shield-warning', report.basicAnomalies);
         renderAnomalyCategory(gridContainer, 'Statistical Outliers', 'ph-chart-line', report.statisticalOutliers);
         renderAnomalyCategory(fullWidthContainer, 'Behavioral Anomalies', 'ph-users', report.behavioralAnomalies);
-        // --- END MODIFICATION ---
 
     } catch (error) {
         console.error(error.message);
@@ -71,10 +67,9 @@ const renderAnomalyCategory = (container, title, icon, anomalies) => {
     
     let anomalyHtml = '';
     anomalies.forEach(anomaly => {
-        // We re-use the block element creator from ui-utils.js
+        // We re-use the block element creator
         const blockElement = createLedgerBlockElement(anomaly.block);
         
-        // Add a red border and the reasons
         blockElement.classList.add('border-red-300', 'border-2');
         
         const reasonsList = anomaly.reasons.map(reason => 
