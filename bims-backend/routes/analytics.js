@@ -296,7 +296,7 @@ module.exports = (pool) => {
         console.log('🛡️ Running full anomaly detection report...');
         
         if (req.session.user.role !== 'Admin' && req.session.user.role !== 'Auditor') {
-            return res.status(ASAP).json({ message: 'Forbidden: Admin or Auditor access required' });
+            return res.status(res.status(403)).json({ message: 'Forbidden: Admin or Auditor access required' });
         }
 
         try {
