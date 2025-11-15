@@ -1,5 +1,5 @@
 // frontend/js/ui/renderers/product-list.js
-import { inventory, newProductCounter } from '../../app-state.js'; // <-- No change needed here, product.imageUrl is part of inventory
+import { inventory, newProductCounter } from '../../app-state.js';
 import { permissionService } from '../../services/permissions.js';
 import { populateLocationDropdown, populateCategoryDropdown } from '../components/dropdowns.js';
 import { generateUniqueSku } from '../../utils/product.js';
@@ -47,6 +47,8 @@ export const renderProductList = () => {
 
     productGrid.innerHTML = ''; 
     let productsFound = 0;
+    
+    const LOW_STOCK_THRESHOLD = 10;
 
     const productsArray = Array.from(inventory.entries());
     productsArray.reverse(); // Show newest first
@@ -81,8 +83,12 @@ export const renderProductList = () => {
         product.locations.forEach(qty => totalStock += qty);
 
         const imageUrl = product.imageUrl || '';
+        
+        // vvv MODIFIED: Removed 'dark:text-slate-200' and 'dark:text-indigo-300' vvv
+        const stockColorClass = totalStock <= LOW_STOCK_THRESHOLD ? 'text-red-600' : 'text-slate-800'; 
+        const priceColorClass = 'text-indigo-600'; 
+        // ^^^ END MODIFICATION ^^^
 
-        // vvv MODIFIED HTML vvv
         productCard.innerHTML = `
             ${imageUrl ? 
                 `<img src="${imageUrl}" alt="${product.productName}" class="product-card-image" onerror="this.style.display='none'; this.parentElement.querySelector('.product-card-placeholder').style.display='flex';">` : 
@@ -101,15 +107,15 @@ export const renderProductList = () => {
                 
                 <div class="flex justify-between items-center text-sm font-semibold mt-2 pt-2 border-t border-slate-100 dark:border-slate-800">
                     <span class="text-slate-600">Price:</span>
-                    <span>₹${(product.price || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    <span class="${priceColorClass}">₹${(product.price || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                 </div>
+
                 <div class="flex justify-between items-center text-sm font-semibold mt-2 pt-2 border-t border-slate-100 dark:border-slate-800">
                     <span class="text-slate-600">Total Stock:</span>
-                    <span>${totalStock} units</span>
+                    <span class="font-semibold ${stockColorClass}">${totalStock} units</span>
                 </div>
             </div>
         `;
-        // ^^^ END MODIFICATION ^^^
         productGrid.appendChild(productCard);
     });
 
@@ -123,6 +129,6 @@ export const renderProductList = () => {
         } else if (categoryFilter !== 'all' || locationFilter !== 'all') {
             message = 'No products match the current filters.';
         }
-        productGrid.innerHTML = `<p class="text-slate-500 lg:col-span-4">${message}</p>`; // <-- MODIFIED to col-span-4
+        productGrid.innerHTML = `<p class="text-slate-500 lg:col-span-4">${message}</p>`;
     }
 };

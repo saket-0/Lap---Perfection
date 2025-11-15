@@ -65,6 +65,10 @@ export const renderProductDetail = (productId, navigateTo) => { // Accept naviga
         return; 
     }
 
+    // vvv DEFINE LOW STOCK THRESHOLD vvv
+    const LOW_STOCK_THRESHOLD = 10;
+    // ^^^ END DEFINITION ^^^
+
     // Get elements
     const editButton = appContent.querySelector('#product-edit-toggle-button');
     const editNameInput = appContent.querySelector('#edit-product-name');
@@ -83,7 +87,6 @@ export const renderProductDetail = (productId, navigateTo) => { // Accept naviga
     
     const sharedIdInput = appContent.querySelector('#update-product-id');
 
-    // vvv MODIFIED THIS BLOCK vvv
     const imageUrl = product.imageUrl || '';
     if (displayImage && displayPlaceholder) {
         if (imageUrl) {
@@ -91,13 +94,11 @@ export const renderProductDetail = (productId, navigateTo) => { // Accept naviga
             displayImage.style.display = 'block';
             displayPlaceholder.style.display = 'none';
         } else {
-            // Trigger the onerror handler or just manually hide/show
             displayImage.src = ""; 
             displayImage.style.display = 'none';
             displayPlaceholder.style.display = 'flex';
         }
     }
-    // ^^^ END BLOCK ^^^
 
     // Populate Display View
     displayName.textContent = product.productName;
@@ -105,8 +106,10 @@ export const renderProductDetail = (productId, navigateTo) => { // Accept naviga
     sharedIdInput.value = productId;
 
     const price = product.price || 0;
-    // vvv MODIFIED THIS LINE vvv
+    // vvv MODIFIED PRICE DISPLAY vvv
     displayPrice.textContent = `₹${price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    displayPrice.classList.remove('text-slate-700');
+    displayPrice.classList.add('text-indigo-600'); // Use brand color
     // ^^^ END MODIFICATION ^^^
     displayCategory.textContent = product.category || 'Uncategorized';
 
@@ -128,17 +131,29 @@ export const renderProductDetail = (productId, navigateTo) => { // Accept naviga
         totalStock += qty;
         const locData = globalLocations.find(l => l.name === location);
         const isArchived = locData ? locData.is_archived : false;
+        
+        // vvv SET DYNAMIC COLOR CLASS vvv
+        const stockColorClass = qty <= LOW_STOCK_THRESHOLD ? 'font-bold text-red-600' : 'font-medium text-slate-800 dark:text-slate-200';
+        // ^^^ END SET ^^^
 
         if (qty > 0 || (locData && !isArchived)) {
+            // vvv MODIFIED THIS BLOCK vvv
             stockLevelsDiv.innerHTML += `
                 <div class="flex justify-between items-center text-sm">
                     <span class="text-slate-600">${location}:</span>
-                    <span class="font-medium text-slate-800">${qty} units</span>
+                    <span class="${stockColorClass}">${qty} units</span>
                 </div>`;
+            // ^^^ END MODIFICATION ^^^
         }
     });
 
-    appContent.querySelector('#detail-total-stock').textContent = `${totalStock} units`;
+    // vvv MODIFIED TOTAL STOCK DISPLAY vvv
+    const totalStockEl = appContent.querySelector('#detail-total-stock');
+    const totalStockColorClass = totalStock <= LOW_STOCK_THRESHOLD ? 'text-red-600' : 'text-indigo-600';
+    totalStockEl.textContent = `${totalStock} units`;
+    totalStockEl.classList.remove('text-indigo-600', 'text-red-600');
+    totalStockEl.classList.add(totalStockColorClass);
+    // ^^^ END MODIFICATION ^^^
     
     // Populate Edit Form
     if (editButton) {

@@ -1,31 +1,26 @@
 <div class="space-y-8">
     <h1 class="text-4xl font-bold text-slate-800">Dashboard</h1>
     
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div class="bg-white p-6 rounded-lg shadow-md">
             <h3 class="text-sm font-medium text-slate-500 uppercase">Total Value</h3>
-            <p id="kpi-total-value" class="text-4xl font-bold text-indigo-600 break-all">₹0.00</p>
+            <p id="kpi-total-value" class="text-4xl font-bold text-indigo-600 whitespace-nowrap">₹0.00</p>
             <p class="text-xs text-slate-400 mt-1">Inventory valuation</p>
         </div>
+        
         <div class="bg-white p-6 rounded-lg shadow-md">
             <h3 class="text-sm font-medium text-slate-500 uppercase">Total Units</h3>
-            <p id="kpi-total-units" class="text-4xl font-bold text-indigo-600 break-all">0</p>
+            <p id="kpi-total-units" class="text-4xl font-bold text-indigo-600 whitespace-nowrap">0</p>
             <p class="text-xs text-slate-400 mt-1">All units across all locations</p>
         </div>
 
         <div class="bg-white p-6 rounded-lg shadow-md">
-            <h3 class="text-sm font-medium text-slate-500 uppercase">Total Products (SKUs)</h3>
-            <p id="kpi-total-skus" class="text-4xl font-bold text-indigo-600 break-all">0</p>
-            <p class="text-xs text-slate-400 mt-1">Unique non-deleted products</p>
+            <h3 class="text-sm font-medium text-slate-500 uppercase whitespace-nowrap">Total Products (SKUs)</h3>
+            <p id="kpi-total-skus" class="text-4xl font-bold text-indigo-600 whitespace-nowrap">0</p>
+            <p class="text-xs text-slate-400 mt-1 whitespace-nowrap">Unique non-deleted products</p>
         </div>
 
-        <div class="bg-white p-6 rounded-lg shadow-md">
-            <h3 class="text-sm font-medium text-slate-500 uppercase">Transactions</h3>
-            <p id="kpi-transactions" class="text-4xl font-bold text-indigo-600 break-all">0</p>
-            <p class="text-xs text-slate-400 mt-1">Blockchain records</p>
         </div>
-    </div>
-
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div id="recent-activity-container" class="bg-white p-6 rounded-lg shadow-md">
             <div class="flex justify-between items-center mb-4">

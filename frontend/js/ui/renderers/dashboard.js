@@ -10,23 +10,24 @@ export const renderDashboard = async () => {
 
     let totalUnits = 0;
     let totalValue = 0;
-    let activeSkuCount = 0; // <-- ADDED
+    let activeSkuCount = 0;
     inventory.forEach(product => {
         if (product.is_deleted) return;
         
-        activeSkuCount++; // <-- ADDED
+        activeSkuCount++;
         let totalStock = 0;
         product.locations.forEach(qty => totalStock += qty);
         totalUnits += totalStock;
         totalValue += (product.price || 0) * totalStock;
     });
 
-    // vvv MODIFIED THIS LINE vvv
     appContent.querySelector('#kpi-total-value').textContent = `₹${totalValue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-    // ^^^ END MODIFICATION ^^^
     appContent.querySelector('#kpi-total-units').textContent = totalUnits;
-    appContent.querySelector('#kpi-total-skus').textContent = activeSkuCount; // <-- ADDED
-    appContent.querySelector('#kpi-transactions').textContent = blockchain.length;
+    appContent.querySelector('#kpi-total-skus').textContent = activeSkuCount;
+    
+    // vvv THIS LINE HAS BEEN REMOVED vvv
+    // appContent.querySelector('#kpi-transactions').textContent = blockchain.length;
+    // ^^^ END REMOVAL ^^^
     
     // --- Render Recent Activity ---
     const activityContainer = appContent.querySelector('#recent-activity-container');
