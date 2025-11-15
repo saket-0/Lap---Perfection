@@ -280,7 +280,7 @@
     background-color: #0f172a; /* slate-900 */
 }
 .dark #confirm-modal-title {
-    color: #e2e8f0; /* slate-2to0 */
+    color: #e2e8f0; /* slate-200 */
 }
 .dark #confirm-modal-body {
     color: #d1d5db; /* slate-300 */
@@ -294,8 +294,11 @@
 }
 /* --- END: Dark Mode for Confirm Modal --- */
 
-/* --- NEW: Dark Mode for HTML Legend --- */
+/* --- MODIFIED: Dark Mode for HTML Legend --- */
 .dark .legend-label {
     color: #94a3b8; /* slate-400 */
+}
+.dark .legend-percentage {
+    color: #e2e8f0; /* slate-200 */
 }
 /* --- END: Dark Mode for HTML Legend --- */

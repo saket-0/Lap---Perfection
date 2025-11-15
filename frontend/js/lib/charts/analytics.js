@@ -5,6 +5,7 @@ import { addChart } from './helpers.js';
 import { showError } from '../../ui/components/notifications.js';
 import { getChartColors, SEMANTIC_PALETTE, CATEGORICAL_PALETTE } from './colors.js';
 
+// vvv MODIFIED HELPER FUNCTION vvv
 /**
  * Generates a custom HTML legend for a chart.
  * @param {Chart} chart - The Chart.js instance.
@@ -14,21 +15,32 @@ const generateHTMLLegend = (chart, containerId) => {
     const legendContainer = document.getElementById(containerId);
     if (!legendContainer) return;
 
+    // Calculate total to get percentages
+    const data = chart.data.datasets[0].data;
+    const total = data.reduce((a, b) => a + b, 0);
+
     const legendItems = chart.data.labels.map((label, index) => {
         const color = chart.data.datasets[0].backgroundColor[index];
+        const value = data[index];
+        const percentage = (total > 0) ? ((value / total) * 100).toFixed(1) : 0;
+        
         return `
             <div class="legend-item">
-                <span class="legend-color-box" style="background-color: ${color}"></span>
-                <span class="legend-label">${label}</span>
+                <div class="legend-label-group">
+                    <span class="legend-color-box" style="background-color: ${color}"></span>
+                    <span class="legend-label">${label}</span>
+                </div>
+                <span class="legend-percentage">${percentage}%</span>
             </div>
         `;
     });
 
     legendContainer.innerHTML = `<div class="chart-legend">${legendItems.join('')}</div>`;
 };
+// ^^^ END MODIFICATION ^^^
 
 // --- Main Analytics Page Renderer ---
-
+// ... (This function is unchanged)
 export const renderAnalyticsPage = async () => {
     try {
         // Render charts that use local data
@@ -147,8 +159,9 @@ const renderMostActiveUsers = (activeUsers) => {
 
 
 // --- Chart Renderers (Local Data) ---
-// (These functions are unchanged)
+
 const renderTxVelocityChart = () => {
+    // ... (This function is unchanged)
     const labels = [];
     const txInMap = new Map();
     const txOutMap = new Map();
@@ -247,6 +260,9 @@ const renderInventoryDistributionChart = () => {
         },
         options: {
             responsive: true,
+            // vvv ADDED vvv
+            maintainAspectRatio: false,
+            // ^^^ END ^^^
             plugins: { 
                 legend: { 
                     display: false 
@@ -274,6 +290,7 @@ const renderInventoryDistributionChart = () => {
 };
 
 const renderTxHeatmapChart = () => {
+    // ... (This function is unchanged)
     const hourCounts = Array(24).fill(0);
     
     blockchain.forEach(block => {
@@ -346,6 +363,9 @@ const renderInventoryCategoryChart = () => {
         },
         options: {
             responsive: true,
+            // vvv ADDED vvv
+            maintainAspectRatio: false,
+            // ^^^ END ^^^
             plugins: { 
                 legend: { 
                     display: false 
@@ -373,18 +393,17 @@ const renderInventoryCategoryChart = () => {
 };
 
 // --- Chart Renderers (KPI Data) ---
-
-// vvv MODIFIED: Added (data, labels) parameters vvv
+// (No changes to the KPI-based chart renderers)
 const renderTxMixLineChart = (data, labels) => {
     const ctx = document.getElementById('tx-mix-line-chart')?.getContext('2d');
-    if (!ctx || !data || !labels) return; // Now this check works correctly
+    if (!ctx || !data || !labels) return; 
 
     const datasets = [
         {
             label: 'Create Item',
             data: data['CREATE_ITEM'] || [],
             borderColor: SEMANTIC_PALETTE.create,
-            backgroundColor: SEMANTIC_PALETTE.create + '1A', // 10% opacity
+            backgroundColor: SEMANTIC_PALETTE.create + '1A', 
             fill: false,
             tension: 0.1
         },
@@ -454,10 +473,9 @@ const renderTxMixLineChart = (data, labels) => {
     addChart(lineChart);
 };
 
-// vvv MODIFIED: Added (data, labels) parameters vvv
 const renderLocationActivityChart = (data, labels) => {
     const ctx = document.getElementById('location-activity-chart')?.getContext('2d');
-    if (!ctx || !data || !labels) return; // Now this check works correctly
+    if (!ctx || !data || !labels) return; 
 
     const datasets = [];
     const colors = getChartColors(Object.keys(data).length);
@@ -497,10 +515,9 @@ const renderLocationActivityChart = (data, labels) => {
     addChart(lineChart);
 };
 
-// vvv MODIFIED: Added (data, labels) parameters vvv
 const renderStockValueChart = (data, labels) => {
     const ctx = document.getElementById('stock-value-chart')?.getContext('2d');
-    if (!ctx || !data || !labels) return; // Now this check works correctly
+    if (!ctx || !data || !labels) return; 
 
     const datasets = [
         {

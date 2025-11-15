@@ -153,17 +153,31 @@
 }
 /* --- END: Confirm Modal Styles --- */
 
-/* --- NEW: HTML Legend Styles --- */
+/* --- MODIFIED: HTML Legend Styles --- */
+.chart-pie-container {
+    max-width: 300px; /* Or max-w-xs equivalent */
+    height: 300px;
+    margin-left: 0;
+    margin-right: auto;
+    position: relative; /* For chart.js responsiveness */
+}
+
 .chart-legend {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    display: flex;
+    flex-direction: column;
     gap: 0.5rem; /* 8px */
-    margin-top: 1rem; /* 16px */
 }
 .legend-item {
     display: flex;
     align-items: center;
+    justify-content: space-between; /* Pushes percentage to the right */
     gap: 0.5rem; /* 8px */
+}
+.legend-label-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0; /* Fixes flex overflow */
 }
 .legend-color-box {
     width: 1rem; /* 16px */
@@ -177,5 +191,11 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+.legend-percentage {
+    font-size: 0.875rem; /* 14px */
+    font-weight: 600;
+    color: #1e293b; /* slate-800 */
+    flex-shrink: 0;
 }
 /* --- END: HTML Legend Styles --- */
