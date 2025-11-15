@@ -1,5 +1,5 @@
 // frontend/js/ui/renderers/product-detail.js
-import { inventory, blockchain, globalLocations } from '../../app-state.js';
+import { inventory, blockchain, globalLocations } from '../../app-state.js'; // <-- No change needed here
 import { permissionService } from '../../services/permissions.js';
 import { showError } from '../components/notifications.js';
 import { populateLocationDropdown, populateCategoryDropdown } from '../components/dropdowns.js';
@@ -29,23 +29,6 @@ const toggleProductEditMode = (isEditing) => {
         displayView.classList.remove('hidden');
         editView.classList.add('hidden');
         editButton.classList.remove('hidden');
-    }
-};
-
-/**
- * Helper to set the content of the preview button in the Edit Product form.
- */
-const setEditFormPreviewButton = (imageUrl) => {
-    const previewButton = document.getElementById('edit-image-preview-button');
-    if (!previewButton) return;
-
-    if (imageUrl) {
-        previewButton.innerHTML = `<img src="${imageUrl}" alt="Product Image Preview">`;
-    } else {
-        previewButton.innerHTML = `
-            <i class="ph-bold ph-upload-simple"></i>
-            <span>Upload an Image</span>
-        `;
     }
 };
 
@@ -87,28 +70,34 @@ export const renderProductDetail = (productId, navigateTo) => { // Accept naviga
     const editNameInput = appContent.querySelector('#edit-product-name');
     const editPriceInput = appContent.querySelector('#edit-product-price');
     const editCategorySelect = appContent.querySelector('#edit-product-category');
-    const editImageUrlInput = appContent.querySelector('#edit-product-image-url'); // <-- This is now hidden
+    const editImageUrlInput = appContent.querySelector('#edit-product-image-url'); // <-- ADDED
     
     const displayName = appContent.querySelector('#detail-product-name');
     const displayId = appContent.querySelector('#detail-product-id');
     const displayCategory = appContent.querySelector('#detail-product-category');
     const displayPrice = appContent.querySelector('#detail-product-price');
+    
+    // --- MODIFIED IMAGE RENDERING ---
     const displayImage = appContent.querySelector('#product-detail-image');
+    const displayPlaceholder = appContent.querySelector('#product-detail-placeholder');
     
     const sharedIdInput = appContent.querySelector('#update-product-id');
 
+    // vvv MODIFIED THIS BLOCK vvv
     const imageUrl = product.imageUrl || '';
-    if (displayImage) {
+    if (displayImage && displayPlaceholder) {
         if (imageUrl) {
             displayImage.src = imageUrl;
-            // Clear placeholder styles in case of previous error
-            displayImage.parentElement.classList.remove('flex', 'items-center', 'justify-center');
-            displayImage.outerHTML = displayImage.outerHTML.replace("<i class=\"ph-bold ph-package text-slate-400 text-6xl\"></i>", "");
+            displayImage.style.display = 'block';
+            displayPlaceholder.style.display = 'none';
         } else {
-            // Trigger the onerror handler to show placeholder
+            // Trigger the onerror handler or just manually hide/show
             displayImage.src = ""; 
+            displayImage.style.display = 'none';
+            displayPlaceholder.style.display = 'flex';
         }
     }
+    // ^^^ END BLOCK ^^^
 
     // Populate Display View
     displayName.textContent = product.productName;
@@ -155,8 +144,7 @@ export const renderProductDetail = (productId, navigateTo) => { // Accept naviga
         editPriceInput.value = price.toFixed(2);
         populateCategoryDropdown(editCategorySelect);
         editCategorySelect.value = product.category || 'Uncategorized';
-        editImageUrlInput.value = imageUrl; // <-- Set hidden input
-        setEditFormPreviewButton(imageUrl); // <-- Set preview button
+        editImageUrlInput.value = imageUrl; // <-- ADDED
         toggleProductEditMode(false); // Ensure edit form is hidden
     }
 

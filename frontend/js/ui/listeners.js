@@ -8,10 +8,9 @@ import { renderProductList } from './renderers/product-list.js';
 import { renderFullLedger } from './renderers/ledger.js';
 import { toggleProductEditMode, renderProductDetail } from './renderers/product-detail.js';
 
-// vvv IMPORT THE NEW MODAL AND THE FILE PROCESSOR vvv
-import { openImageModal } from './components/image-modal.js';
-import { processFileToDataURL } from '../services/image-uploader.js';
-// ^^^ END IMPORTS ^^^
+// vvv IMPORT THE NEW SERVICE vvv
+import { openImageCropper, handleCropConfirm, handleCropCancel } from '../services/image-uploader.js';
+// ^^^ IMPORT THE NEW SERVICE ^^^
 
 // --- Import all handler functions ---
 import {
@@ -58,6 +57,7 @@ export function initAppListeners() {
             localStorage.setItem('bims_theme', newTheme);
             
             // applyTheme is global via script tag in index.html
+            // If theme.js were a module, we'd import and call applyTheme(newTheme)
             applyTheme(newTheme);
         });
     }
@@ -102,6 +102,16 @@ export function initAppListeners() {
             }
             authService.logout(showLogin);
         });
+    }
+
+    // --- Cropper Modal Listeners (Global) ---
+    const cropperConfirmButton = document.getElementById('cropper-confirm-button');
+    if (cropperConfirmButton) {
+        cropperConfirmButton.addEventListener('click', () => handleCropConfirm(showSuccess));
+    }
+    const cropperCancelButton = document.getElementById('cropper-cancel-button');
+    if (cropperCancelButton) {
+        cropperCancelButton.addEventListener('click', () => handleCropCancel());
     }
     
     // --- Navigation Listeners ---
@@ -238,16 +248,16 @@ export function initAppListeners() {
             }
         }
 
-        // vvv THIS IS THE NEW CLICK LOGIC vvv
+        // vvv MODIFIED CLICK LISTENERS vvv
         if (e.target.closest('#add-image-upload-button')) {
             e.preventDefault();
-            appContent.querySelector('#add-image-file-input')?.click(); // Open file dialog
+            appContent.querySelector('#add-image-file-input')?.click();
         }
         if (e.target.closest('#edit-image-upload-button')) {
             e.preventDefault();
-            appContent.querySelector('#edit-image-file-input')?.click(); // Open file dialog
+            appContent.querySelector('#edit-image-file-input')?.click();
         }
-        // ^^^ END OF NEW CLICK LOGIC ^^^
+        // ^^^ END OF MODIFIED CLICK LISTENERS ^^^
     });
 
     // --- CHANGES & INPUTS ---
@@ -270,36 +280,44 @@ export function initAppListeners() {
             renderFullLedger();
         }
 
-        // vvv THIS IS THE NEW CHANGE LOGIC vvv
+        // vvv MODIFIED CHANGE LISTENERS vvv
         if (e.target.id === 'add-image-file-input') {
             const file = e.target.files[0];
             const targetUrlInput = appContent.querySelector('#add-image-url');
             if (file && targetUrlInput) {
                 try {
-                    const dataUrl = await processFileToDataURL(file);
-                    // Open modal on 'upload' tab with the file preview
-                    openImageModal(targetUrlInput, { initialTab: 'upload', previewUrl: dataUrl });
+                    // Open the cropper and wait for it to resolve
+                    const croppedBase64 = await openImageCropper(file, showSuccess, showError);
+                    // Set the input value to the cropped image data
+                    targetUrlInput.value = croppedBase64;
                 } catch (error) {
-                    showError(error.message);
+                    if (error.message !== 'User cancelled cropping.') {
+                        showError(error.message);
+                    }
+                    console.warn('Image selection cancelled.');
                 }
-                e.target.value = null; // Clear file input
+                e.target.value = null; // Clear file input so user can select same file again
             }
         }
         if (e.target.id === 'edit-image-file-input') {
             const file = e.target.files[0];
             const targetUrlInput = appContent.querySelector('#edit-product-image-url');
             if (file && targetUrlInput) {
-                try {
-                    const dataUrl = await processFileToDataURL(file);
-                    // Open modal on 'upload' tab with the file preview
-                    openImageModal(targetUrlInput, { initialTab: 'upload', previewUrl: dataUrl });
+                 try {
+                    // Open the cropper and wait for it to resolve
+                    const croppedBase64 = await openImageCropper(file, showSuccess, showError);
+                    // Set the input value to the cropped image data
+                    targetUrlInput.value = croppedBase64;
                 } catch (error) {
-                    showError(error.message);
+                    if (error.message !== 'User cancelled cropping.') {
+                        showError(error.message);
+                    }
+                    console.warn('Image selection cancelled.');
                 }
                 e.target.value = null; // Clear file input
             }
         }
-        // ^^^ END OF NEW CHANGE LOGIC ^^^
+        // ^^^ END OF MODIFIED CHANGE LISTENERS ^^^
     });
 
     appContent.addEventListener('input', (e) => {
@@ -309,35 +327,13 @@ export function initAppListeners() {
         }
     });
 
-    // vvv THIS IS THE NEW PASTE LOGIC vvv
-    appContent.addEventListener('paste', (e) => {
-        let targetUrlInput;
-        if (e.target.id === 'add-image-url') {
-            targetUrlInput = e.target;
-        } else if (e.target.id === 'edit-product-image-url') {
-            targetUrlInput = e.target;
-        } else {
-            return; // Not a target input, do nothing
-        }
-
-        e.preventDefault();
-        const pastedText = (e.clipboardData || window.clipboardData).getData('text');
-        
-        if (pastedText) {
-            // Open modal on 'url' tab with the pasted text
-            openImageModal(targetUrlInput, { initialTab: 'url', previewUrl: pastedText });
-        }
-    });
-    // ^^^ END OF NEW PASTE LOGIC ^^^
-
     // --- FOCUS (for select-all-on-focus) ---
     appContent.addEventListener('focus', (e) => {
         if (e.target.tagName === 'INPUT' && (
             e.target.type === 'text' || 
             e.target.type === 'number' || 
             e.target.type === 'email' || 
-            e.target.type === 'password' ||
-            e.target.type === 'url' // Added URL type
+            e.target.type === 'password'
         )) {
             // Exclude search and date inputs
             if (e.target.id !== 'product-search-input' && 

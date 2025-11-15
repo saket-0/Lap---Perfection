@@ -213,11 +213,6 @@
 .dark .product-card:hover {
     border-color: #4338ca; /* indigo-700 */
 }
-/* vvv THIS IS THE DARK MODE FIX vvv */
-.dark .product-card-image {
-    background-color: #1e293b; /* ADDED slate-800 */
-}
-/* ^^^ END ^^^ */
 
 /* 10. Anomaly/Snapshot views */
 .dark .bg-yellow-100 {
@@ -261,95 +256,21 @@
     background-color: #475569; /* slate-600 */
 }
 
-/* vvv ALL STYLES BELOW ARE NEW FOR DARK MODE vvv */
-
-/* --- Dark Mode: Image Preview Button --- */
-.dark .image-preview-button {
-    border-color: #334155; /* slate-700 */
-    background-color: #1e293b; /* slate-800 */
-    color: #94a3b8; /* slate-400 */
+/* --- NEW: Dark Mode for Cropper Modal --- */
+.dark #image-cropper-modal .bg-white {
+    background-color: #0f172a; /* slate-900 */
 }
-.dark .image-preview-button:hover {
-    border-color: #818cf8; /* indigo-400 */
-    color: #818cf8;
+.dark #image-cropper-modal .cropper-container {
+    background-color: #1e293b; /* slate-800 */
+}
+.dark #image-cropper-modal .cropper-view-box {
+    outline: 2px solid #818cf8; /* indigo-400 */
+}
+.dark #cropper-cancel-button {
     background-color: #334155; /* slate-700 */
-}
-
-/* --- Dark Mode: Image Upload Modal --- */
-.dark .image-modal-overlay {
-    background-color: rgba(2, 6, 23, 0.7); /* slate-950 70% */
-}
-.dark .image-modal-content {
-    background-color: #0f172a; /* slate-900 */
-}
-.dark .image-modal-header {
-    border-bottom-color: #1e293b; /* slate-800 */
-}
-.dark .image-modal-header h2 {
     color: #e2e8f0; /* slate-200 */
 }
-.dark .image-modal-close-button {
-    color: #94a3b8; /* slate-400 */
-}
-.dark .image-modal-close-button:hover {
-    background-color: #1e293b; /* slate-800 */
-    color: #e2e8f0; /* slate-200 */
-}
-.dark .image-modal-tabs {
-    border-bottom-color: #1e293b; /* slate-800 */
-}
-.dark .image-modal-tab-button {
-    color: #94a3b8; /* slate-400 */
-}
-.dark .image-modal-tab-button:hover {
-    background-color: #1e293b; /* slate-800 */
-}
-.dark .image-modal-tab-button.active {
-    color: #a5b4fc; /* indigo-300 */
-    border-bottom-color: #a5b4fc;
-}
-
-/* --- Dark Mode: Modal: Upload Tab --- */
-.dark .image-modal-drop-zone {
-    border-color: #334155; /* slate-700 */
-    background-color: #1e293b; /* slate-800 */
-    color: #94a3b8; /* slate-400 */
-}
-.dark .image-modal-drop-zone.dragover {
-    border-color: #a5b4fc; /* indigo-300 */
-    background-color: #312e81; /* indigo-900 */
-}
-.dark .image-modal-drop-zone i {
-    color: #475569; /* slate-600 */
-}
-.dark .image-modal-drop-zone span {
-    color: #a5b4fc; /* indigo-300 */
-}
-
-/* --- Dark Mode: Modal: Preview & Footer --- */
-.dark .image-modal-preview-container {
-    background-color: #1e293b; /* slate-800 */
-}
-.dark .image-modal-footer {
-    background-color: #0f172a; /* slate-900 */
-    border-top-color: #1e293b; /* slate-800 */
-}
-.dark .image-modal-button-primary {
-    background-color: #818cf8; /* indigo-400 */
-    color: #0f172a; /* slate-900 */
-}
-.dark .image-modal-button-primary:hover {
-    background-color: #a5b4fc; /* indigo-300 */
-}
-.dark .image-modal-button-primary:disabled {
+.dark #cropper-cancel-button:hover {
     background-color: #475569; /* slate-600 */
-    color: #94a3b8; /* slate-400 */
 }
-.dark .image-modal-button-secondary {
-    background-color: #1e293b; /* slate-800 */
-    color: #e2e8f0; /* slate-200 */
-    border-color: #334155; /* slate-700 */
-}
-.dark .image-modal-button-secondary:hover {
-    background-color: #334155; /* slate-700 */
-}
+/* --- END: Dark Mode for Cropper Modal --- */
