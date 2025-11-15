@@ -165,8 +165,6 @@
     position: relative; /* For chart.js responsiveness */
 }
 
-/* vvv REMOVED .chart-legend-wrapper vvv */
-
 .chart-legend {
     /* vvv MODIFIED vvv */
     display: grid;
@@ -178,7 +176,7 @@
 .legend-item {
     display: flex;
     align-items: center;
-    justify-content: space-between; /* Pushes percentage to the right */
+    /* vvv REMOVED justify-content vvv */
     gap: 0.5rem; /* 8px */
 }
 .legend-label-group {
@@ -200,10 +198,5 @@
     overflow: hidden;
     text-overflow: ellipsis;
 }
-.legend-percentage {
-    font-size: 0.875rem; /* 14px */
-    font-weight: 600;
-    color: #1e293b; /* slate-800 */
-    flex-shrink: 0;
-}
+/* vvv REMOVED .legend-percentage vvv */
 /* --- END: HTML Legend Styles --- */

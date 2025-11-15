@@ -5,6 +5,7 @@ import { addChart } from './helpers.js';
 import { showError } from '../../ui/components/notifications.js';
 import { getChartColors, SEMANTIC_PALETTE, CATEGORICAL_PALETTE } from './colors.js';
 
+// vvv REVERTED HELPER FUNCTION vvv
 /**
  * Generates a custom HTML legend for a chart.
  * @param {Chart} chart - The Chart.js instance.
@@ -14,28 +15,19 @@ const generateHTMLLegend = (chart, containerId) => {
     const legendContainer = document.getElementById(containerId);
     if (!legendContainer) return;
 
-    // Calculate total to get percentages
-    const data = chart.data.datasets[0].data;
-    const total = data.reduce((a, b) => a + b, 0);
-
     const legendItems = chart.data.labels.map((label, index) => {
         const color = chart.data.datasets[0].backgroundColor[index];
-        const value = data[index];
-        const percentage = (total > 0) ? ((value / total) * 100).toFixed(1) : 0;
-        
         return `
             <div class="legend-item">
-                <div class="legend-label-group">
-                    <span class="legend-color-box" style="background-color: ${color}"></span>
-                    <span class="legend-label">${label}</span>
-                </div>
-                <span class="legend-percentage">${percentage}%</span>
+                <span class="legend-color-box" style="background-color: ${color}"></span>
+                <span class="legend-label">${label}</span>
             </div>
         `;
     });
 
     legendContainer.innerHTML = `<div class="chart-legend">${legendItems.join('')}</div>`;
 };
+// ^^^ END REVERT ^^^
 
 // --- Main Analytics Page Renderer ---
 // ... (This function is unchanged)
@@ -263,6 +255,7 @@ const renderInventoryDistributionChart = () => {
                 legend: { 
                     display: false 
                 },
+                // vvv MODIFIED TOOLTIP vvv
                 tooltip: {
                     callbacks: {
                         label: function(context) {
@@ -271,12 +264,20 @@ const renderInventoryDistributionChart = () => {
                                 label += ': ';
                             }
                             if (context.parsed !== null) {
-                                label += `₹${context.parsed.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                                // Get total
+                                const total = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                                // Calculate percentage
+                                const percentage = (context.parsed / total * 100).toFixed(1);
+                                // Format value
+                                const value = context.parsed.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                                // Combine
+                                label += `₹${value} (${percentage}%)`;
                             }
                             return label;
                         }
                     }
                 }
+                // ^^^ END MODIFICATION ^^^
             }
         }
     });
@@ -364,6 +365,7 @@ const renderInventoryCategoryChart = () => {
                 legend: { 
                     display: false 
                 },
+                // vvv MODIFIED TOOLTIP vvv
                 tooltip: {
                     callbacks: {
                         label: function(context) {
@@ -372,12 +374,20 @@ const renderInventoryCategoryChart = () => {
                                 label += ': ';
                             }
                             if (context.parsed !== null) {
-                                label += `₹${context.parsed.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                                // Get total
+                                const total = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                                // Calculate percentage
+                                const percentage = (context.parsed / total * 100).toFixed(1);
+                                // Format value
+                                const value = context.parsed.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                                // Combine
+                                label += `₹${value} (${percentage}%)`;
                             }
                             return label;
                         }
                     }
                 }
+                // ^^^ END MODIFICATION ^^^
             }
         }
     });
