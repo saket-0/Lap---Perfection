@@ -122,3 +122,32 @@ input[type=number] {
 #theme-toggle-button {
     transition: all 0.2s ease-in-out;
 }
+
+/* STYLES FOR NEW UPLOAD BUTTON */
+.form-upload-button {
+    flex-shrink: 0;
+    padding: 0.25rem 0.5rem; /* 4px 8px */
+    margin-top: 0.25rem; /* align with input */
+    border-bottom: 2px solid #cbd5e1; /* slate-300 */
+    color: #4f46e5; /* indigo-600 */
+    transition: all 0.2s ease-in-out;
+    cursor: pointer;
+}
+.form-upload-button:hover {
+    border-bottom-color: #4338ca; /* indigo-700 */
+    color: #4338ca;
+}
+.form-upload-button i {
+    font-size: 1.25rem; /* 20px */
+    display: block;
+}
+
+/* Dark mode for upload button */
+.dark .form-upload-button {
+    border-bottom-color: #334155; /* slate-700 */
+    color: #818cf8; /* indigo-400 */
+}
+.dark .form-upload-button:hover {
+    border-bottom-color: #a5b4fc; /* indigo-300 */
+    color: #a5b4fc;
+}
