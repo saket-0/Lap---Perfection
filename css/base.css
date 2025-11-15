@@ -1,0 +1,62 @@
+/* Custom styles for the Inter font */
+body {
+    font-family: 'Inter', sans-serif;
+}
+
+/* This makes the <main> content area fill the screen */
+/* and handle all scrolling, stopping the <body> from scrolling. */
+main {
+    height: 100vh;
+    overflow-y: auto;
+}
+
+/* Custom scrollbar for scrollable areas */
+#item-history-display::-webkit-scrollbar,
+#full-ledger-display::-webkit-scrollbar,
+#recent-activity-list::-webkit-scrollbar,
+#low-stock-list::-webkit-scrollbar,
+#profile-activity-list::-webkit-scrollbar,
+#profile-session-list::-webkit-scrollbar,
+.anomaly-list-scroll::-webkit-scrollbar,
+.user-table-container::-webkit-scrollbar,
+.location-list-scroll::-webkit-scrollbar,
+.category-list-scroll::-webkit-scrollbar {
+    width: 6px;
+}
+#item-history-display::-webkit-scrollbar-track,
+#full-ledger-display::-webkit-scrollbar-track,
+#recent-activity-list::-webkit-scrollbar-track,
+#low-stock-list::-webkit-scrollbar-track,
+#profile-activity-list::-webkit-scrollbar-track,
+#profile-session-list::-webkit-scrollbar-track,
+.anomaly-list-scroll::-webkit-scrollbar-track,
+.user-table-container::-webkit-scrollbar-track,
+.location-list-scroll::-webkit-scrollbar-track,
+.category-list-scroll::-webkit-scrollbar-track {
+    background: #f1f5f9; /* slate-100 */
+}
+#item-history-display::-webkit-scrollbar-thumb,
+#full-ledger-display::-webkit-scrollbar-thumb,
+#recent-activity-list::-webkit-scrollbar-thumb,
+#low-stock-list::-webkit-scrollbar-thumb,
+#profile-activity-list::-webkit-scrollbar-thumb,
+#profile-session-list::-webkit-scrollbar-thumb,
+.anomaly-list-scroll::-webkit-scrollbar-thumb,
+.user-table-container::-webkit-scrollbar-thumb,
+.location-list-scroll::-webkit-scrollbar-thumb,
+.category-list-scroll::-webkit-scrollbar-thumb {
+    background: #94a3b8; /* slate-400 */
+    border-radius: 3px;
+}
+#item-history-display::-webkit-scrollbar-thumb:hover,
+#full-ledger-display::-webkit-scrollbar-thumb:hover,
+#recent-activity-list::-webkit-scrollbar-thumb:hover,
+#low-stock-list::-webkit-scrollbar-thumb:hover,
+#profile-activity-list::-webkit-scrollbar-thumb:hover,
+#profile-session-list::-webkit-scrollbar-thumb:hover,
+.anomaly-list-scroll::-webkit-scrollbar-thumb:hover,
+.user-table-container::-webkit-scrollbar-thumb:hover,
+.location-list-scroll::-webkit-scrollbar-thumb:hover,
+.category-list-scroll::-webkit-scrollbar-thumb:hover {
+    background: #64748b; /* slate-500 */
+}

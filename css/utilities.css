@@ -1,0 +1,124 @@
+/* Clickable stat item styles */
+.clickable-stat-item {
+    cursor: pointer;
+    padding: 0.25rem 0.5rem; /* Small padding for better hover */
+    margin: 0 -0.5rem; /* Offset padding */
+    border-radius: 0.25rem; /* 4px */
+    transition: background-color 0.2s ease-in-out;
+}
+.clickable-stat-item:hover {
+    background-color: #f1f5f9; /* slate-100 */
+}
+
+/* Canvas and Chart Styles */
+canvas {
+    max-width: 100%;
+    height: auto;
+}
+#tx-velocity-chart,
+#tx-heatmap-chart,
+#item-stock-chart {
+    min-height: 250px;
+}
+#inventory-distribution-chart,
+#inventory-category-chart {
+    min-height: 250px;
+}
+
+/* Hide number input spinners */
+/* For Chrome, Safari, Edge, Opera */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+/* For Firefox */
+input[type=number] {
+  -moz-appearance: textfield;
+}
+
+/* STYLES FOR UNDERLINED INPUTS */
+.form-input-underline {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    --tw-ring-shadow: 0 0 #0000;
+    border-bottom: 2px solid #cbd5e1; /* slate-300 */
+    display: block;
+    width: 100%;
+    margin-top: 0.25rem;
+    padding: 0.25rem 0.1rem;
+    background-color: transparent;
+}
+.form-input-underline:focus {
+    outline: none;
+    border-bottom-color: #4f46e5; /* indigo-600 */
+}
+.form-select-underline {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    --tw-ring-shadow: 0 0 #0000;
+    border-bottom: 2px solid #cbd5e1; /* slate-300 */
+    display: block;
+    width: 100%;
+    margin-top: 0.25rem;
+    padding: 0.25rem 0.1rem;
+    background-color: transparent;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.5rem center;
+    background-repeat: no-repeat;
+    background-size: 1.5em 1.5em;
+    padding-right: 2.5rem;
+}
+.form-select-underline:focus {
+    outline: none;
+    border-bottom-color: #4f46e5; /* indigo-600 */
+}
+
+/* Style for filter alignment */
+.form-select-filter {
+    font-size: 0.875rem; /* 14px */
+    padding-top: 0.5rem;    /* 8px */
+    padding-bottom: 0.25rem; /* 4px (pb-1) */
+}
+
+/* Styles for Hash Copy Button */
+.hash-container {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem; /* 4px */
+    min-width: 0; /* Critical for flex + truncate */
+}
+.hash-container strong {
+    flex-shrink: 0; /* Prevents "Hash:" from shrinking */
+}
+.hash-container .truncate {
+    min-width: 0; /* Allows the hash string to be truncated */
+}
+.copy-hash-button {
+    flex-shrink: 0;
+    padding: 0.1rem 0.25rem; /* 4px 8px */
+    border-radius: 0.25rem; /* 4px */
+    transition: background-color 0.2s ease-in-out;
+    color: #64748b; /* slate-500 */
+    cursor: pointer;
+}
+.copy-hash-button:hover {
+    background-color: #e2e8f0; /* slate-200 */
+    color: #334155; /* slate-700 */
+}
+.copy-hash-button i {
+    display: block; /* Fixes icon alignment */
+}
+
+/* Dark Mode Toggle Button */
+#theme-toggle-button {
+    transition: all 0.2s ease-in-out;
+}
