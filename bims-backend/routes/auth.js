@@ -99,8 +99,13 @@ module.exports = (pool) => {
             // Get user data *before* modifying session
             const userForLog = req.session.user;
 
-            // Set cookie to expire immediately
+            // vvv THIS IS THE FIX vvv
+            // Stop this session from rolling (which would update expiry to +5min)
+            req.session.cookie.rolling = false; 
+            // Set maxAge to 0, forcing connect-pg-simple to update the
+            // 'expire' column in the database to the current time.
             req.session.cookie.maxAge = 0; 
+            // ^^^ END OF FIX ^^^
             
             // *** DO NOT SET req.session.user = null ***
             // We leave the user object attached so the query
