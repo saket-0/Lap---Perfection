@@ -133,7 +133,8 @@ export const renderProductDetail = (productId, navigateTo) => { // Accept naviga
         const isArchived = locData ? locData.is_archived : false;
         
         // vvv SET DYNAMIC COLOR CLASS vvv
-        const stockColorClass = qty <= LOW_STOCK_THRESHOLD ? 'font-bold text-red-600' : 'font-medium text-slate-800 dark:text-slate-200';
+        // const stockColorClass = qty <= LOW_STOCK_THRESHOLD ? 'font-bold text-red-600' : 'font-medium text-slate-800 dark:text-slate-200';
+        const stockColorClass = qty <= LOW_STOCK_THRESHOLD ? 'font-bold text-red-600' : 'font-medium text-slate-800';
         // ^^^ END SET ^^^
 
         if (qty > 0 || (locData && !isArchived)) {
